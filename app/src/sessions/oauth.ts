@@ -55,7 +55,12 @@ function getClientId(): string {
     url.hostname === "127.0.0.1" ||
     url.hostname === "[::1]"
   ) {
-    const redirect = `${window.location.origin}${import.meta.env.BASE_URL}oauth/callback`;
+    // Match the production client-metadata: redirect_uri is the SPA
+    // root, not a separate /oauth/callback page. The library's
+    // `findRedirectUrl()` matches `location.pathname` against the
+    // registered redirect_uri, so the callback exchange only runs
+    // when the auth server lands the browser on the same path.
+    const redirect = `${window.location.origin}${import.meta.env.BASE_URL}`;
     const params = new URLSearchParams({
       redirect_uri: redirect,
       scope: LOOPBACK_DECLARED_SCOPES,

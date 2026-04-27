@@ -6,7 +6,7 @@
   "tos_uri": "https://idiolect.dev/fieldwork/",
   "policy_uri": "https://idiolect.dev/fieldwork/",
   "redirect_uris": [
-    "https://idiolect.dev/fieldwork/oauth/callback"
+    "https://idiolect.dev/fieldwork/"
   ],
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],

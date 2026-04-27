@@ -9,6 +9,12 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-04-27
+
+### Fixed
+
+- Sign-in still failed with "Invalid redirect_uri https://idiolect.dev/fieldwork/oauth/callback" for users whose browser or whose PDS auth server had a stale copy of the pre-0.1.4 client metadata (GitHub Pages serves `client-metadata.json` with `max-age=600`, and atproto auth servers cache metadata server-side too). Register both redirect URIs in the metadata so stale and fresh clients both validate. New flows pick the SPA root, the legacy callback URI stays valid as a fallback.
+
 ## [0.1.4] - 2026-04-27
 
 ### Fixed

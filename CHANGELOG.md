@@ -9,6 +9,13 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-04-27
+
+### Fixed
+
+- Live deploy still failed after 0.1.1: passing `import panprotoGlue from "@panproto-glue"` to `Panproto.init()` handed in the *default export* (the wasm-bindgen init function) instead of the namespace object. The package's `loadWasm` saw an input that wasn't a glue module, fell into its URL-import branch, and threw "Failed to construct 'URL': Invalid URL" because `String(initFn)` is not a URL. Switch to `import * as panprotoGlue` so the namespace (with `default` = init fn plus the named Rust-fn exports) reaches `Panproto.init()` and matches `WasmGlueModule` at runtime.
+- Re-render `og.png` so the "a workshop for community schema curation" tagline is visible. Headless Chrome's `--window-size=1200,630` was clipping the bottom ~70px below the wordmark; render at 1200x720 and crop to 1200x630 from the top with imagemagick.
+
 ## [0.1.1] - 2026-04-27
 
 ### Fixed

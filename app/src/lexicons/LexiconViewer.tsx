@@ -9,7 +9,7 @@
 // - Diff: pin a baseline and surface added/removed/changed fields.
 // - Try: a curl-able request stub or a minimal example record body.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useSessionsStore } from "../sessions/store";
 import type { Session } from "../sessions/types";
 
@@ -454,6 +454,11 @@ function FieldsView({
   );
 }
 
+// Inlined refs render as siblings in the same table so the type /
+// format / description columns line up at every depth. The visual
+// hierarchy comes from `pl` on the name cell, scaled by `depth`.
+const INDENT_PX = 14;
+
 function FieldsTable({
   rows,
   defs,
@@ -468,12 +473,20 @@ function FieldsTable({
   onNavExternal: (nsid: string) => void;
 }) {
   return (
-    <table className="w-full text-xs">
+    <table className="w-full text-xs table-fixed">
+      <colgroup>
+        <col className="w-6" />
+        <col className="w-1/4" />
+        <col className="w-1/4" />
+        <col className="w-20" />
+        <col />
+      </colgroup>
       <tbody>
         {rows.map((r) => (
           <FieldRowView
             key={r.name}
             row={r}
+            depth={0}
             defs={defs}
             visited={visited}
             onNavInternal={onNavInternal}
@@ -487,12 +500,14 @@ function FieldsTable({
 
 function FieldRowView({
   row,
+  depth,
   defs,
   visited,
   onNavInternal,
   onNavExternal,
 }: {
   row: FieldRow;
+  depth: number;
   defs: Record<string, Def>;
   visited: Set<string>;
   onNavInternal: (defName: string) => void;
@@ -503,11 +518,12 @@ function FieldRowView({
   );
   const cycles: string[] = row.expands.filter((n) => visited.has(n));
   const externals = row.externalRefs;
+  const namePad = { paddingLeft: depth * INDENT_PX };
 
   return (
     <>
       <tr className="border-t border-stone-100 align-top">
-        <td className="py-1 pr-2 w-8">
+        <td className="py-1 pr-2">
           {row.required ? (
             <span className="text-red-700 font-bold" title="required">
               *
@@ -516,44 +532,61 @@ function FieldRowView({
             <span className="text-stone-300">·</span>
           )}
         </td>
-        <td className="py-1 pr-2 font-mono">{row.name}</td>
-        <td className="py-1 pr-2 font-mono text-stone-700">
+        <td className="py-1 pr-2 font-mono" style={namePad}>
+          {row.name}
+        </td>
+        <td className="py-1 pr-2 font-mono text-stone-700 truncate">
           <LinkifiedType
             text={row.type}
             onNavInternal={onNavInternal}
             onNavExternal={onNavExternal}
           />
         </td>
-        <td className="py-1 pr-2 font-mono text-stone-500">
+        <td className="py-1 pr-2 font-mono text-stone-500 truncate">
           {row.format ?? ""}
         </td>
         <td className="py-1 text-stone-700">
           {row.description ?? <span className="text-stone-400">none</span>}
         </td>
       </tr>
-      {inlineable.map((refName) => (
-        <tr key={`expand-${refName}`}>
-          <td />
-          <td colSpan={4} className="pl-3 py-1">
-            <div className="border-l-2 border-sky-200 pl-3">
-              <div className="text-[10px] uppercase text-sky-700 mb-1">
+      {inlineable.map((refName) => {
+        const childRows = readFieldsForDef(defs[refName]) ?? [];
+        const childVisited = new Set([...visited, refName]);
+        const childPad = { paddingLeft: (depth + 1) * INDENT_PX };
+        return (
+          <Fragment key={`expand-${refName}`}>
+            <tr className="border-t border-stone-100">
+              <td />
+              <td
+                colSpan={4}
+                className="py-1 text-[10px] uppercase text-sky-700"
+                style={childPad}
+              >
                 #{refName} inlined
-              </div>
-              <FieldsTable
-                rows={readFieldsForDef(defs[refName]) ?? []}
+              </td>
+            </tr>
+            {childRows.map((child) => (
+              <FieldRowView
+                key={`${refName}/${child.name}`}
+                row={child}
+                depth={depth + 1}
                 defs={defs}
-                visited={new Set([...visited, refName])}
+                visited={childVisited}
                 onNavInternal={onNavInternal}
                 onNavExternal={onNavExternal}
               />
-            </div>
-          </td>
-        </tr>
-      ))}
+            ))}
+          </Fragment>
+        );
+      })}
       {cycles.map((refName) => (
         <tr key={`cycle-${refName}`}>
           <td />
-          <td colSpan={4} className="pl-3 py-1 text-[10px] text-amber-700">
+          <td
+            colSpan={4}
+            className="py-1 text-[10px] text-amber-700"
+            style={{ paddingLeft: (depth + 1) * INDENT_PX }}
+          >
             cycle:{" "}
             <RefLink
               defName={refName}
@@ -567,7 +600,11 @@ function FieldRowView({
       {externals.length > 0 && (
         <tr>
           <td />
-          <td colSpan={4} className="pl-3 py-1 text-[10px] text-stone-500">
+          <td
+            colSpan={4}
+            className="py-1 text-[10px] text-stone-500"
+            style={{ paddingLeft: (depth + 1) * INDENT_PX }}
+          >
             external refs (not inlined):{" "}
             {externals.map((e, i) => (
               <span key={e}>

@@ -72,7 +72,7 @@ function LensSidebar() {
       data-walk="sidebar"
       className="md:w-64 md:border-r md:border-stone-200 bg-stone-50 px-3 py-3 md:py-4 flex flex-col gap-4 text-sm border-b md:border-b-0 border-stone-200 md:max-h-none max-h-64 overflow-auto md:overflow-visible md:shrink-0"
     >
-      <section className="flex flex-col gap-2">
+      <section data-walk="lens-list" className="flex flex-col gap-2">
         <h2 className="font-semibold tracking-tight text-stone-700">
           Lenses in your PDS
         </h2>

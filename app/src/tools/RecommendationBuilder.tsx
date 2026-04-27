@@ -122,14 +122,16 @@ function RecommendationForm({
         />
       </Field>
       <Field label="Issuing community at-uri">
-        <AtUriAutocomplete
-          value={(body.issuingCommunity as string) ?? ""}
-          onChange={(v) => patch("issuingCommunity", v)}
-          expectedCollection="dev.idiolect.community"
-          placeholder={useAtUriPlaceholder(
-            "at://did:plc:.../dev.idiolect.community/main",
-          )}
-        />
+        <div data-walk="recommendation-issuing">
+          <AtUriAutocomplete
+            value={(body.issuingCommunity as string) ?? ""}
+            onChange={(v) => patch("issuingCommunity", v)}
+            expectedCollection="dev.idiolect.community"
+            placeholder={useAtUriPlaceholder(
+              "at://did:plc:.../dev.idiolect.community/main",
+            )}
+          />
+        </div>
       </Field>
       <Field label="Lens path (in invocation order)">
         <div data-walk="recommendation-lenspath">
@@ -140,14 +142,16 @@ function RecommendationForm({
         </div>
       </Field>
       <Field label="Caveats text (optional)">
-        <textarea
-          value={(body.caveatsText as string) ?? ""}
-          onChange={(e) =>
-            patch("caveatsText", e.target.value || undefined)
-          }
-          rows={3}
-          className="w-full px-2 py-1.5 border border-stone-300 rounded text-sm"
-        />
+        <div data-walk="recommendation-caveats">
+          <textarea
+            value={(body.caveatsText as string) ?? ""}
+            onChange={(e) =>
+              patch("caveatsText", e.target.value || undefined)
+            }
+            rows={3}
+            className="w-full px-2 py-1.5 border border-stone-300 rounded text-sm"
+          />
+        </div>
       </Field>
       <Field label="Created at (RFC 3339)">
         <DatetimeInput
@@ -164,20 +168,22 @@ function RecommendationForm({
           onChange={(next) => patch("conditions", next)}
         />
       </div>
-      <ConditionTreeEditor
-        label="Preconditions (postfix, optional)"
-        nodes={
-          (body.preconditions as ReadonlyArray<unknown> | undefined)?.map(
-            (n) => n as Record<string, unknown>,
-          ) ?? []
-        }
-        onChange={(next) =>
-          patch(
-            "preconditions",
-            next.length === 0 ? undefined : next,
-          )
-        }
-      />
+      <div data-walk="recommendation-preconditions">
+        <ConditionTreeEditor
+          label="Preconditions (postfix, optional)"
+          nodes={
+            (body.preconditions as ReadonlyArray<unknown> | undefined)?.map(
+              (n) => n as Record<string, unknown>,
+            ) ?? []
+          }
+          onChange={(next) =>
+            patch(
+              "preconditions",
+              next.length === 0 ? undefined : next,
+            )
+          }
+        />
+      </div>
       <DiffPane draft={draft} />
     </form>
   );

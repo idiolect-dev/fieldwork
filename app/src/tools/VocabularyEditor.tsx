@@ -172,31 +172,35 @@ function VocabForm({
         </div>
       </Field>
       <Field label="Top action id">
-        <input
-          type="text"
-          value={top}
-          onChange={(e) => patch("top", e.target.value)}
-          placeholder="any_action"
-          list={`vocab-entries-${draft.body.id}`}
-          className="w-full px-2 py-1.5 border border-stone-300 rounded font-mono text-sm"
-        />
-        <datalist id={`vocab-entries-${draft.body.id}`}>
-          {actions.map((a) => (
-            <option key={a.id} value={a.id} />
-          ))}
-        </datalist>
+        <div data-walk="vocab-top">
+          <input
+            type="text"
+            value={top}
+            onChange={(e) => patch("top", e.target.value)}
+            placeholder="any_action"
+            list={`vocab-entries-${draft.body.id}`}
+            className="w-full px-2 py-1.5 border border-stone-300 rounded font-mono text-sm"
+          />
+          <datalist id={`vocab-entries-${draft.body.id}`}>
+            {actions.map((a) => (
+              <option key={a.id} value={a.id} />
+            ))}
+          </datalist>
+        </div>
       </Field>
       <Field label="Supersedes (optional at-uri to a prior vocabulary)">
-        <AtUriAutocomplete
-          value={(body.supersedes as string) ?? ""}
-          onChange={(v) =>
-            patch("supersedes", v.trim() || undefined)
-          }
-          expectedCollection="dev.idiolect.vocab"
-          placeholder={useAtUriPlaceholder(
-            "at://did:plc:.../dev.idiolect.vocab/<rkey>",
-          )}
-        />
+        <div data-walk="vocab-supersedes">
+          <AtUriAutocomplete
+            value={(body.supersedes as string) ?? ""}
+            onChange={(v) =>
+              patch("supersedes", v.trim() || undefined)
+            }
+            expectedCollection="dev.idiolect.vocab"
+            placeholder={useAtUriPlaceholder(
+              "at://did:plc:.../dev.idiolect.vocab/<rkey>",
+            )}
+          />
+        </div>
       </Field>
       <Field label="Created at (RFC 3339)">
         <DatetimeInput

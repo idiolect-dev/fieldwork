@@ -9,6 +9,12 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.15] - 2026-04-27
+
+### Changed
+
+- Walkthroughs now cover every functionally-distinct section in each workshop. The intro flow gains steps for the Guidance pane and the per-tool "?" trigger button. Vocab adds Top action id and Supersedes steps. Community splits the previous catch-all "Core sets and endorsements" step into individually-targeted Membership roll, Core schemas, Core lenses, and Endorsed communities steps, plus a Conventions text step. Recommendation gains Issuing community, Caveats, and a separate Preconditions step (previously folded into Conditions). Lexicon Browser gets one step per tab (JSON, Definitions, Fields, Refs, Diff, Try). Lens Manager adds a Sign-in-first step. New `data-walk` markers thread the spotlight onto each section that needed one.
+
 ## [0.1.14] - 2026-04-27
 
 ### Added

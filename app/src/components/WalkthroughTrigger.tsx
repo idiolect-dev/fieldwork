@@ -15,6 +15,7 @@ export function WalkthroughTrigger({ flow, title }: Props) {
   return (
     <button
       type="button"
+      data-walk="walkthrough-trigger"
       onClick={() => open(flow)}
       className="text-stone-400 hover:text-stone-700 text-sm w-6 h-6 inline-flex items-center justify-center rounded-full border border-stone-300 hover:border-stone-500"
       aria-label="Open walkthrough"

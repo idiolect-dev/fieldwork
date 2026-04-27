@@ -141,39 +141,47 @@ function CommunityForm({
         </div>
       </Field>
       <Field label="Membership roll at-uri (optional)">
-        <AtUriAutocomplete
-          value={(body.membershipRoll as string) ?? ""}
-          onChange={(v) => patch("membershipRoll", v || undefined)}
-          placeholder={useAtUriPlaceholder("at://did:plc:.../<membership-roll>")}
-        />
+        <div data-walk="community-roll">
+          <AtUriAutocomplete
+            value={(body.membershipRoll as string) ?? ""}
+            onChange={(v) => patch("membershipRoll", v || undefined)}
+            placeholder={useAtUriPlaceholder("at://did:plc:.../<membership-roll>")}
+          />
+        </div>
       </Field>
       <Field label="Core schemas">
-        <RefList
-          items={Array.isArray(body.coreSchemas) ? (body.coreSchemas as Ref[]) : []}
-          onChange={(next) => patch("coreSchemas", next.length === 0 ? undefined : next)}
-          kind="schema"
-        />
+        <div data-walk="community-core-schemas">
+          <RefList
+            items={Array.isArray(body.coreSchemas) ? (body.coreSchemas as Ref[]) : []}
+            onChange={(next) => patch("coreSchemas", next.length === 0 ? undefined : next)}
+            kind="schema"
+          />
+        </div>
       </Field>
       <Field label="Core lenses">
-        <RefList
-          items={Array.isArray(body.coreLenses) ? (body.coreLenses as Ref[]) : []}
-          onChange={(next) => patch("coreLenses", next.length === 0 ? undefined : next)}
-          kind="lens"
-        />
+        <div data-walk="community-core-lenses">
+          <RefList
+            items={Array.isArray(body.coreLenses) ? (body.coreLenses as Ref[]) : []}
+            onChange={(next) => patch("coreLenses", next.length === 0 ? undefined : next)}
+            kind="lens"
+          />
+        </div>
       </Field>
       <Field label="Endorsed communities">
-        <AtUriList
-          items={
-            Array.isArray(body.endorsedCommunities)
-              ? (body.endorsedCommunities as string[])
-              : []
-          }
-          onChange={(next) =>
-            patch("endorsedCommunities", next.length === 0 ? undefined : next)
-          }
-          expectedCollection="dev.idiolect.community"
-          placeholderHint="at://did:plc:.../dev.idiolect.community/main"
-        />
+        <div data-walk="community-endorsed">
+          <AtUriList
+            items={
+              Array.isArray(body.endorsedCommunities)
+                ? (body.endorsedCommunities as string[])
+                : []
+            }
+            onChange={(next) =>
+              patch("endorsedCommunities", next.length === 0 ? undefined : next)
+            }
+            expectedCollection="dev.idiolect.community"
+            placeholderHint="at://did:plc:.../dev.idiolect.community/main"
+          />
+        </div>
       </Field>
       <div data-walk="community-conventions" className="grid grid-cols-1 gap-4">
       <Field label="Conventions">
@@ -185,14 +193,16 @@ function CommunityForm({
         />
       </Field>
       <Field label="Conventions text (optional)">
-        <textarea
-          value={(body.conventionsText as string) ?? ""}
-          onChange={(e) =>
-            patch("conventionsText", e.target.value || undefined)
-          }
-          rows={4}
-          className="w-full px-2 py-1.5 border border-stone-300 rounded text-sm"
-        />
+        <div data-walk="community-conventions-text">
+          <textarea
+            value={(body.conventionsText as string) ?? ""}
+            onChange={(e) =>
+              patch("conventionsText", e.target.value || undefined)
+            }
+            rows={4}
+            className="w-full px-2 py-1.5 border border-stone-300 rounded text-sm"
+          />
+        </div>
       </Field>
       </div>
       <Field label="Created at (RFC 3339)">

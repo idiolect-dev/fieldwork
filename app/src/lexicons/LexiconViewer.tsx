@@ -75,11 +75,12 @@ export function LexiconViewer({ json, body, onNavigateLexicon }: Props) {
 
   return (
     <div className="border border-stone-200 rounded overflow-hidden">
-      <nav className="flex bg-stone-100 border-b border-stone-200 text-xs flex-wrap">
+      <nav data-walk="lexicon-tabs" className="flex bg-stone-100 border-b border-stone-200 text-xs flex-wrap">
         {(Object.keys(MODE_LABEL) as Mode[]).map((m) => (
           <button
             key={m}
             type="button"
+            data-walk={`lexicon-tab-${m}`}
             onClick={() => setMode(m)}
             className={`px-3 py-1.5 border-r border-stone-200 ${
               mode === m

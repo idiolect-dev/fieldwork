@@ -58,7 +58,7 @@ export function GuidancePane({ draft }: { draft: Draft | null }) {
     : null;
 
   return (
-    <aside className="md:w-80 md:border-l md:border-stone-200 bg-stone-50 px-4 py-4 overflow-auto border-t md:border-t-0 border-stone-200 md:shrink-0">
+    <aside data-walk="guidance" className="md:w-80 md:border-l md:border-stone-200 bg-stone-50 px-4 py-4 overflow-auto border-t md:border-t-0 border-stone-200 md:shrink-0">
       <h3 className="font-semibold tracking-tight text-stone-700 text-sm mb-3">
         Guidance
       </h3>

@@ -9,6 +9,12 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-04-27
+
+### Fixed
+
+- Sign-in completed at the user's PDS but never produced a signed-in session in fieldwork. The `BrowserOAuthClient` library's `findRedirectUrl()` matches the current `location.pathname` against the registered `redirect_uri`. Our static callback page redirected the browser from `/fieldwork/oauth/callback` to `/fieldwork/`, so the path no longer matched the registered URI and the callback exchange was skipped silently. Register the SPA root (`https://idiolect.dev/fieldwork/`) as `redirect_uri` directly so the auth server lands the browser on the matching path. The dev-only loopback `client_id` synthesises the same shape.
+
 ## [0.1.3] - 2026-04-27
 
 ### Fixed

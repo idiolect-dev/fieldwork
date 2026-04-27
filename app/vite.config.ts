@@ -2,6 +2,23 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
+
+const here = dirname(fileURLToPath(import.meta.url));
+
+// `@panproto/core`'s `Panproto.init()` accepts a pre-imported
+// wasm-bindgen glue module for bundler environments (see the
+// `WasmGlueModule` overload). That is the supported Vite path. The
+// package's `exports` field does not expose the `dist/panproto_wasm.js`
+// subpath, so we alias a stable virtual id at our boundary; Vite +
+// vite-plugin-wasm then bundle the glue and its `_bg.wasm` sibling
+// with proper fingerprinting.
+const PANPROTO_GLUE_ALIAS = "@panproto-glue";
+const panprotoGluePath = resolve(
+  here,
+  "node_modules/@panproto/core/dist/panproto_wasm.js",
+);
 
 // fieldwork is deployed at https://idiolect.dev/fieldwork via GitHub
 // Pages (repo: idiolect-dev/fieldwork). Production asset URLs must
@@ -21,6 +38,11 @@ import topLevelAwait from "vite-plugin-top-level-await";
 export default defineConfig(({ command }) => ({
   base: command === "build" ? "/fieldwork/" : "/",
   plugins: [react(), wasm(), topLevelAwait()],
+  resolve: {
+    alias: {
+      [PANPROTO_GLUE_ALIAS]: panprotoGluePath,
+    },
+  },
   server: {
     host: "127.0.0.1",
     port: 4173,
@@ -38,12 +60,11 @@ export default defineConfig(({ command }) => ({
     target: "esnext",
     sourcemap: true,
   },
-  // @panproto/core ships a wasm-bindgen glue + sibling .wasm and
-  // resolves them via a dynamic import relative to the package's
-  // own dist/. Letting Vite's dep optimizer pre-bundle the package
-  // rewrites that path to /node_modules/.vite/deps/panproto_wasm.js
-  // which doesn't exist; excluding it from optimization keeps the
-  // package's own resolver in charge of finding its siblings.
+  // The dep optimizer would pre-bundle `@panproto/core` and rewrite
+  // its `import.meta.url` glue resolver to a path that doesn't
+  // exist. We bypass that resolver entirely by passing a
+  // pre-imported glue (see src/panproto/init.ts), so excluding the
+  // package keeps dev consistent with prod.
   optimizeDeps: {
     exclude: ["@panproto/core"],
   },

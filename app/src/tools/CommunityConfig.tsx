@@ -139,15 +139,12 @@ function CommunityForm({
         </div>
       </Field>
       <div data-walk="community-conventions" className="grid grid-cols-1 gap-4">
-      <Field label="Conventions URI (optional)">
-        <input
-          type="text"
-          value={
-            typeof body.conventions === "string" ? body.conventions : ""
+      <Field label="Conventions">
+        <ConventionsList
+          items={Array.isArray(body.conventions) ? (body.conventions as Convention[]) : []}
+          onChange={(next) =>
+            patch("conventions", next.length === 0 ? undefined : next)
           }
-          onChange={(e) => patch("conventions", e.target.value || undefined)}
-          placeholder="https://example.com/conventions"
-          className="w-full px-2 py-1.5 border border-stone-300 rounded font-mono text-sm"
         />
       </Field>
       <Field label="Conventions text (optional)">
@@ -248,6 +245,294 @@ function MemberList({
       )}
     </div>
   );
+}
+
+// `community.conventions` is `array<union<#conventionReviewCadence,
+// #conventionVerificationReq, #conventionDeprecationPolicy>>`. Each
+// item carries a `$type` discriminator atproto unions use.
+type ConventionType =
+  | "dev.idiolect.community#conventionReviewCadence"
+  | "dev.idiolect.community#conventionVerificationReq"
+  | "dev.idiolect.community#conventionDeprecationPolicy";
+
+const VERIFICATION_KINDS = [
+  "roundtrip-test",
+  "property-test",
+  "formal-proof",
+  "conformance-test",
+  "static-check",
+  "convergence-preserving",
+] as const;
+
+type Convention =
+  | {
+      $type: "dev.idiolect.community#conventionReviewCadence";
+      maxDays: number;
+      scope?: string;
+    }
+  | {
+      $type: "dev.idiolect.community#conventionVerificationReq";
+      kind: (typeof VERIFICATION_KINDS)[number];
+      property?: Record<string, unknown>;
+    }
+  | {
+      $type: "dev.idiolect.community#conventionDeprecationPolicy";
+      noticePeriodDays: number;
+      replacementRequired?: boolean;
+    };
+
+const CONVENTION_LABEL: Record<ConventionType, string> = {
+  "dev.idiolect.community#conventionReviewCadence": "Review cadence",
+  "dev.idiolect.community#conventionVerificationReq": "Verification requirement",
+  "dev.idiolect.community#conventionDeprecationPolicy": "Deprecation policy",
+};
+
+function blankConvention($type: ConventionType): Convention {
+  switch ($type) {
+    case "dev.idiolect.community#conventionReviewCadence":
+      return { $type, maxDays: 7 };
+    case "dev.idiolect.community#conventionVerificationReq":
+      return { $type, kind: "roundtrip-test" };
+    case "dev.idiolect.community#conventionDeprecationPolicy":
+      return { $type, noticePeriodDays: 30 };
+  }
+}
+
+function ConventionsList({
+  items,
+  onChange,
+}: {
+  items: Convention[];
+  onChange: (next: Convention[]) => void;
+}) {
+  const [adding, setAdding] = useState(false);
+
+  function update(idx: number, patch: Partial<Convention>) {
+    const next = items.slice();
+    next[idx] = { ...next[idx], ...patch } as Convention;
+    onChange(next);
+  }
+  function remove(idx: number) {
+    onChange(items.filter((_, i) => i !== idx));
+  }
+  function move(idx: number, delta: number) {
+    const target = idx + delta;
+    if (target < 0 || target >= items.length) return;
+    const next = items.slice();
+    [next[idx], next[target]] = [next[target], next[idx]];
+    onChange(next);
+  }
+  function add($type: ConventionType) {
+    onChange([...items, blankConvention($type)]);
+    setAdding(false);
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {items.length === 0 && (
+        <p className="text-xs text-stone-500">
+          No conventions yet. Communities use these as the structured,
+          decidable subset of their rules (review cadence, required
+          verifications, deprecation policy). Free-form norms go in
+          conventions text below.
+        </p>
+      )}
+      {items.map((item, idx) => (
+        <ConventionCard
+          key={idx}
+          item={item}
+          onChange={(patch) => update(idx, patch)}
+          onRemove={() => remove(idx)}
+          onMoveUp={idx > 0 ? () => move(idx, -1) : undefined}
+          onMoveDown={
+            idx < items.length - 1 ? () => move(idx, 1) : undefined
+          }
+        />
+      ))}
+      {adding ? (
+        <div className="flex flex-wrap gap-2 items-center">
+          {(Object.keys(CONVENTION_LABEL) as ConventionType[]).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => add(t)}
+              className="px-2 py-1 text-xs rounded border border-stone-300 bg-white hover:bg-stone-50"
+            >
+              {CONVENTION_LABEL[t]}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setAdding(false)}
+            className="text-stone-500 text-xs px-1"
+            title="Cancel"
+          >
+            ×
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="self-start text-xs text-stone-700 px-2 py-1 rounded border border-stone-200 hover:bg-stone-50"
+        >
+          + convention
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ConventionCard({
+  item,
+  onChange,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+}: {
+  item: Convention;
+  onChange: (patch: Partial<Convention>) => void;
+  onRemove: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+}) {
+  return (
+    <div className="border border-stone-200 rounded bg-white">
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-stone-100 bg-stone-50">
+        <span className="text-xs font-semibold text-stone-700">
+          {CONVENTION_LABEL[item.$type]}
+        </span>
+        <div className="ml-auto flex items-center gap-1">
+          <button
+            type="button"
+            disabled={!onMoveUp}
+            onClick={onMoveUp}
+            className="text-stone-400 hover:text-stone-700 disabled:opacity-30 text-xs px-1"
+            title="Move up"
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            disabled={!onMoveDown}
+            onClick={onMoveDown}
+            className="text-stone-400 hover:text-stone-700 disabled:opacity-30 text-xs px-1"
+            title="Move down"
+          >
+            ↓
+          </button>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="text-stone-500 hover:text-red-700 text-sm px-1"
+            title="Remove"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+      <div className="px-3 py-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {item.$type === "dev.idiolect.community#conventionReviewCadence" && (
+          <>
+            <SmallField label="Max business-days">
+              <input
+                type="number"
+                min={0}
+                value={item.maxDays}
+                onChange={(e) =>
+                  onChange({ maxDays: parseIntOrZero(e.target.value) })
+                }
+                className="w-full px-2 py-1 border border-stone-300 rounded text-sm"
+              />
+            </SmallField>
+            <SmallField label="Scope (optional)">
+              <input
+                type="text"
+                value={item.scope ?? ""}
+                onChange={(e) =>
+                  onChange({ scope: e.target.value || undefined })
+                }
+                placeholder="lens-review / verification-review / all"
+                className="w-full px-2 py-1 border border-stone-300 rounded text-sm"
+              />
+            </SmallField>
+          </>
+        )}
+        {item.$type === "dev.idiolect.community#conventionVerificationReq" && (
+          <SmallField label="Verification kind">
+            <select
+              value={item.kind}
+              onChange={(e) =>
+                onChange({
+                  kind: e.target.value as (typeof VERIFICATION_KINDS)[number],
+                })
+              }
+              className="w-full px-2 py-1 border border-stone-300 rounded text-sm bg-white"
+            >
+              {VERIFICATION_KINDS.map((k) => (
+                <option key={k} value={k}>
+                  {k}
+                </option>
+              ))}
+            </select>
+          </SmallField>
+        )}
+        {item.$type === "dev.idiolect.community#conventionDeprecationPolicy" && (
+          <>
+            <SmallField label="Notice period (days)">
+              <input
+                type="number"
+                min={0}
+                value={item.noticePeriodDays}
+                onChange={(e) =>
+                  onChange({
+                    noticePeriodDays: parseIntOrZero(e.target.value),
+                  })
+                }
+                className="w-full px-2 py-1 border border-stone-300 rounded text-sm"
+              />
+            </SmallField>
+            <SmallField label="Replacement required?">
+              <label className="flex items-center gap-2 text-sm text-stone-700">
+                <input
+                  type="checkbox"
+                  checked={!!item.replacementRequired}
+                  onChange={(e) =>
+                    onChange({
+                      replacementRequired: e.target.checked || undefined,
+                    })
+                  }
+                />
+                <span>
+                  Yes, deprecations must point at a replacement lens
+                </span>
+              </label>
+            </SmallField>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SmallField({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex flex-col gap-1 text-xs text-stone-600">
+      <span>{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function parseIntOrZero(v: string): number {
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) ? n : 0;
 }
 
 function MemberCard({

@@ -9,6 +9,12 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-04-27
+
+### Fixed
+
+- Community Config previously rendered `community.conventions` as a single text input labelled "Conventions URI" with a placeholder URL. The lexicon defines that field as `array<union<#conventionReviewCadence, #conventionVerificationReq, #conventionDeprecationPolicy>>`, so anything typed into the URI box was invalid against the schema. Replace with a structured editor that adds, reorders, and removes typed entries. Each entry exposes the variant's required fields (review cadence's `maxDays` and optional scope, verification requirement's `kind` enum, deprecation policy's `noticePeriodDays` and `replacementRequired` toggle). Existing drafts imported under the old shape fall back to an empty list rather than crashing.
+
 ## [0.1.9] - 2026-04-27
 
 ### Fixed

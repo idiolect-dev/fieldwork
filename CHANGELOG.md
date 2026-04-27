@@ -9,6 +9,12 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.14] - 2026-04-27
+
+### Added
+
+- Dialect Composer now edits the three remaining lexicon fields the form previously couldn't reach: `idiolects` (the schemas this dialect bundles, edited as a list of at-uris with autocomplete), `deprecations` (full structured editor over `{ref, replacement?, deprecatedAt, reason}` items, every at-uri autocompleted, datetime via the same Now-stamping picker the rest of the form uses), and `previousVersion` (single at-uri that points back at a prior dialect, autocomplete scoped to `dev.idiolect.dialect`). New `dialect/with-idiolects` fixture exercises the idiolects field. Dialect walkthrough gains three steps so first-run users see all three new sections.
+
 ## [0.1.13] - 2026-04-27
 
 ### Added

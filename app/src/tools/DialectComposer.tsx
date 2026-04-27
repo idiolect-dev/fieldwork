@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useWorkspaceStore, draftsByKind } from "../workspace/store";
 import { mintDraftId } from "../workspace/ids";
@@ -185,6 +185,49 @@ function DialectForm({
         </div>
       </Field>
 
+      <Field label="Idiolects (the schemas this dialect bundles)">
+        <div data-walk="dialect-idiolects">
+          <SchemaRefList
+            items={
+              Array.isArray(body.idiolects)
+                ? (body.idiolects as Array<{ uri?: string; cid?: string }>)
+                : []
+            }
+            onChange={(next) =>
+              patch("idiolects", next.length === 0 ? undefined : next)
+            }
+          />
+        </div>
+      </Field>
+
+      <Field label="Deprecations (optional)">
+        <div data-walk="dialect-deprecations">
+          <DeprecationList
+            items={
+              Array.isArray(body.deprecations)
+                ? (body.deprecations as Deprecation[])
+                : []
+            }
+            onChange={(next) =>
+              patch("deprecations", next.length === 0 ? undefined : next)
+            }
+          />
+        </div>
+      </Field>
+
+      <Field label="Previous version at-uri (optional)">
+        <div data-walk="dialect-previous">
+          <AtUriAutocomplete
+            value={(body.previousVersion as string) ?? ""}
+            onChange={(v) => patch("previousVersion", v || undefined)}
+            expectedCollection="dev.idiolect.dialect"
+            placeholder={useAtUriPlaceholder(
+              "at://did:plc:.../dev.idiolect.dialect/<rkey>",
+            )}
+          />
+        </div>
+      </Field>
+
       <Field label="Version (optional)">
         <input
           type="text"
@@ -218,6 +261,194 @@ function Field({
       <span className="font-medium">{label}</span>
       {children}
     </label>
+  );
+}
+
+// `dialect.idiolects` items are `dev.idiolect.defs#schemaRef`.
+// Editing focuses on the at-uri; cid roundtrips through the form
+// untouched on import.
+function SchemaRefList({
+  items,
+  onChange,
+}: {
+  items: Array<{ uri?: string; cid?: string }>;
+  onChange: (next: Array<{ uri?: string; cid?: string }>) => void;
+}) {
+  const placeholder = useAtUriPlaceholder(
+    "at://did:plc:.../<schema-rkey>",
+  );
+  function setUri(i: number, uri: string) {
+    const next = items.map((r, j) => (j === i ? { ...r, uri } : r));
+    onChange(next.filter((r) => r.uri && r.uri.length > 0));
+  }
+  function add() {
+    onChange([...items, { uri: "" }]);
+  }
+  function remove(i: number) {
+    onChange(items.filter((_, j) => j !== i));
+  }
+  const rows = items.length === 0 ? [{ uri: "" }] : items;
+  return (
+    <div className="flex flex-col gap-2">
+      {rows.map((r, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <div className="flex-1">
+            <AtUriAutocomplete
+              value={r.uri ?? ""}
+              onChange={(v) => setUri(i, v)}
+              placeholder={placeholder}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => remove(i)}
+            className="text-stone-500 text-xs px-1"
+            title="Remove"
+            disabled={items.length === 0}
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        className="self-start text-xs text-stone-700 px-2 py-1 rounded border border-stone-200 hover:bg-stone-50"
+      >
+        + idiolect
+      </button>
+    </div>
+  );
+}
+
+// `dialect.deprecations` items: { ref (at-uri, required),
+// replacement? (at-uri), deprecatedAt (datetime, required),
+// reason (string, required, ≤1000 graphemes) }.
+interface Deprecation {
+  ref: string;
+  replacement?: string;
+  deprecatedAt: string;
+  reason: string;
+}
+
+function DeprecationList({
+  items,
+  onChange,
+}: {
+  items: Deprecation[];
+  onChange: (next: Deprecation[]) => void;
+}) {
+  const [adding, setAdding] = useState(false);
+  function update(i: number, patch: Partial<Deprecation>) {
+    const next = items.map((d, j) => (j === i ? { ...d, ...patch } : d));
+    onChange(next);
+  }
+  function remove(i: number) {
+    onChange(items.filter((_, j) => j !== i));
+  }
+  function add() {
+    onChange([
+      ...items,
+      {
+        ref: "",
+        deprecatedAt: new Date().toISOString(),
+        reason: "",
+      },
+    ]);
+    setAdding(false);
+  }
+  return (
+    <div className="flex flex-col gap-2">
+      {items.length === 0 && !adding && (
+        <p className="text-xs text-stone-500">
+          No deprecations. Use this to record idiolects or lenses
+          that were once part of this dialect and are now retired.
+        </p>
+      )}
+      {items.map((d, i) => (
+        <DeprecationCard
+          key={i}
+          item={d}
+          onChange={(p) => update(i, p)}
+          onRemove={() => remove(i)}
+        />
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        className="self-start text-xs text-stone-700 px-2 py-1 rounded border border-stone-200 hover:bg-stone-50"
+      >
+        + deprecation
+      </button>
+    </div>
+  );
+}
+
+function DeprecationCard({
+  item,
+  onChange,
+  onRemove,
+}: {
+  item: Deprecation;
+  onChange: (patch: Partial<Deprecation>) => void;
+  onRemove: () => void;
+}) {
+  const refPlaceholder = useAtUriPlaceholder(
+    "at://did:plc:.../<deprecated-record>",
+  );
+  const replacementPlaceholder = useAtUriPlaceholder(
+    "at://did:plc:.../<successor>",
+  );
+  return (
+    <div className="border border-stone-200 rounded bg-white">
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-stone-100 bg-stone-50">
+        <span className="text-xs font-semibold text-stone-700">
+          Deprecation
+        </span>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="ml-auto text-stone-500 hover:text-red-700 text-sm px-1"
+          title="Remove"
+        >
+          ×
+        </button>
+      </div>
+      <div className="px-3 py-2 grid grid-cols-1 gap-3">
+        <label className="flex flex-col gap-0.5 text-xs text-stone-600">
+          <span>Deprecated ref (at-uri)</span>
+          <AtUriAutocomplete
+            value={item.ref}
+            onChange={(v) => onChange({ ref: v })}
+            placeholder={refPlaceholder}
+          />
+        </label>
+        <label className="flex flex-col gap-0.5 text-xs text-stone-600">
+          <span>Replacement at-uri (optional)</span>
+          <AtUriAutocomplete
+            value={item.replacement ?? ""}
+            onChange={(v) => onChange({ replacement: v || undefined })}
+            placeholder={replacementPlaceholder}
+          />
+        </label>
+        <label className="flex flex-col gap-0.5 text-xs text-stone-600">
+          <span>Deprecated at (RFC 3339)</span>
+          <DatetimeInput
+            value={item.deprecatedAt}
+            onChange={(v) => onChange({ deprecatedAt: v })}
+          />
+        </label>
+        <label className="flex flex-col gap-0.5 text-xs text-stone-600">
+          <span>Reason</span>
+          <textarea
+            value={item.reason}
+            onChange={(e) => onChange({ reason: e.target.value })}
+            rows={2}
+            className="px-2 py-1 border border-stone-300 rounded text-sm"
+          />
+        </label>
+      </div>
+    </div>
   );
 }
 

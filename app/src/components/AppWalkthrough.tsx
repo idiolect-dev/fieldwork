@@ -105,6 +105,24 @@ const FLOWS: Flow[] = [
         target: "[data-walk='dialect-lenses']",
       },
       {
+        title: "Idiolects",
+        body: "The schemas this dialect bundles. Subscribers walk these to know what records the dialect speaks. At-uris autocomplete as usual.",
+        tool: "dialect",
+        target: "[data-walk='dialect-idiolects']",
+      },
+      {
+        title: "Deprecations",
+        body: "Record idiolects or lenses that were once part of the dialect. Each entry takes a deprecated ref, an optional replacement, the deprecation timestamp, and a reason. Subscribers use this to plan migrations.",
+        tool: "dialect",
+        target: "[data-walk='dialect-deprecations']",
+      },
+      {
+        title: "Previous version",
+        body: "Optional at-uri pointer back to the dialect this one supersedes. Forms a version chain subscribers can walk.",
+        tool: "dialect",
+        target: "[data-walk='dialect-previous']",
+      },
+      {
         title: "Ship it",
         body: "Export downloads JSON, copies a CLI command, or publishes straight to your PDS via OAuth. After a publish the sidebar dot turns emerald.",
         tool: "dialect",

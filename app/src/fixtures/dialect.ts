@@ -70,6 +70,29 @@ export const dialectFixtures = [
     },
   },
   {
+    name: "dialect/with-idiolects",
+    label: "idiolects (the schemas this dialect bundles)",
+    body: {
+      name: "encounter-corpus",
+      description:
+        "Dialect that bundles three schemas as the canonical idiolect set, with a single normalising lens.",
+      owningCommunity:
+        "at://did:plc:example/dev.idiolect.community/main",
+      idiolects: [
+        { uri: "at://did:plc:example/dev.panproto.schema/encounter-v2" },
+        { uri: "at://did:plc:example/dev.panproto.schema/observation-v1" },
+        { uri: "at://did:plc:example/dev.panproto.schema/correction-v1" },
+      ],
+      preferredLenses: [
+        {
+          uri: "at://did:plc:example/dev.panproto.schema.lens/normalise",
+        },
+      ],
+      version: "1.0",
+      createdAt: "2026-04-26T00:00:00Z",
+    },
+  },
+  {
     name: "dialect/with-supersedes-chain",
     label: "version chain (previousVersion points back at v2)",
     body: {

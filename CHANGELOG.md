@@ -9,6 +9,12 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-04-27
+
+### Fixed
+
+- Lens Manager's "protolab" link pointed at `https://protolab.dev`. The correct URL is `https://panproto.dev/protolab`.
+
 ## [0.1.6] - 2026-04-27
 
 ### Changed

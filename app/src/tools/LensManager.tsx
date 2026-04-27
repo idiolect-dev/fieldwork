@@ -86,7 +86,7 @@ export function LensManager() {
         <p className="text-sm text-stone-600">
           Author lenses in{" "}
           <a
-            href="https://protolab.dev"
+            href="https://panproto.dev/protolab"
             target="_blank"
             rel="noreferrer"
             className="underline"

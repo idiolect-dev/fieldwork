@@ -9,6 +9,12 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.11] - 2026-04-27
+
+### Fixed
+
+- `publishDraft` now runs the body through panproto's atproto-lexicon parser before posting and refuses on validation failure. Previously a recommendation draft with an empty `lensPath` (which the lexicon defines as `minLength: 1`) would be rejected by the PDS with an opaque `createRecord failed` error. Now publish surfaces the panproto error directly so the user knows what to fix. Recommendation walkthrough updated to call out the at-least-one-lens requirement.
+
 ## [0.1.10] - 2026-04-27
 
 ### Fixed

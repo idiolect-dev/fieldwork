@@ -11,6 +11,7 @@ import { activeAgent } from "./oauth";
 import { useSessionsStore } from "./store";
 import { hasScope, repoScopeForKind } from "./scopes";
 import { normalizeBodyAtUris } from "./atUriNormalize";
+import { validateRecord } from "../panproto/validate";
 
 export interface PublishResult {
   /** at-uri of the freshly created record. */
@@ -56,6 +57,17 @@ export async function publishDraft(draft: Draft): Promise<PublishResult> {
   if (required && sessionScopes.length > 0 && !hasScope(sessionScopes, required)) {
     throw new PublishError(
       `Active session is missing the required scope ${required}. Re-sign in with a tier that grants it.`,
+    );
+  }
+
+  // Schema guard: refuse to publish a draft panproto's atproto-
+  // lexicon parser would reject. Catches things the form lets you
+  // get away with locally (empty `lensPath`, missing required
+  // fields) before they bounce off the PDS with an opaque error.
+  const validation = validateRecord(draft.kind, draft.body.body);
+  if (!validation.ok) {
+    throw new PublishError(
+      `Draft is invalid against dev.idiolect.${draft.kind}. ${validation.error ?? ""}`.trim(),
     );
   }
 

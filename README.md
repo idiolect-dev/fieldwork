@@ -31,14 +31,14 @@ import in one tool feeds suggestions in the next.
 | `Lens Manager`             | Lists your published lenses and uploads protolab-authored bodies to your PDS.                        | `dev.panproto.schema.lens`    |
 | `Lexicon Browser`          | Read-only view of every bundled `dev.idiolect.*` lexicon plus user-imported docs.                    | (read-only)                   |
 
-Every editor has the same import / export shape — paste an at-uri,
-drop a JSON file, or pick from the bundled fixtures; export downloads
-a JSON record body, copies an `idiolect-cli` publish command, or
-publishes straight to your PDS via OAuth.
+Every editor has the same import / export shape. Paste an at-uri,
+drop a JSON file, or pick from the bundled fixtures. Export
+downloads a JSON record body, copies an `idiolect-cli` publish
+command, or publishes straight to your PDS via OAuth.
 
 ## Why static-only
 
-idiolect is a federated record system; everything fieldwork builds is
+idiolect is a federated record system. Everything fieldwork builds is
 a record draft conforming to one of the `dev.idiolect.*` lexicons.
 Publishing means appending the record to the user's PDS, which only
 the user can authorise. Keeping fieldwork backend-free (static HTML +
@@ -80,8 +80,8 @@ even though the input shows the human-readable handle.
 
 The autocomplete walks segments in order:
 
-1. Handle / DID search across local sessions and bsky typeahead;
-   when an `expectedCollection` is set, the active session's
+1. Handle / DID search across local sessions and bsky typeahead.
+   When an `expectedCollection` is set, the active session's
    records of that kind appear at the top.
 2. Collection segment, prefix-filtered against the bundled record
    NSIDs.
@@ -92,15 +92,15 @@ The autocomplete walks segments in order:
 
 Six tabs over the active lexicon document:
 
-- `JSON` — syntax-highlighted source.
-- `Definitions` — table of every `def` entry with its type and description.
-- `Fields` — per-def field tables, with refs and `array<ref>` and unions
+- `JSON`: syntax-highlighted source.
+- `Definitions`: table of every `def` entry with its type and description.
+- `Fields`: per-def field tables, with refs and `array<ref>` and unions
   recursively expanded as indented child rows. Cycle-safe.
-- `Refs` — a per-def "uses" / "used by" table; clickable internal refs
+- `Refs`: a per-def "uses" / "used by" table. Clickable internal refs
   jump to the Fields tab and scroll to the target.
-- `Diff` — pin a baseline version and surface added / removed / changed
+- `Diff`: pin a baseline version and surface added / removed / changed
   fields against it.
-- `Try` — a copy-pasteable record body or curl-able request stub for
+- `Try`: a copy-pasteable record body or curl-able request stub for
   the lexicon's `main` def, filled with placeholder values that
   substitute the active session's DID and PDS when signed in.
 
@@ -149,10 +149,6 @@ cd app && bun test          # frontend (vitest)
 cd app && bun run typecheck # tsc --noEmit
 ```
 
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
-
 ## License
 
 MIT. See [LICENSE](LICENSE).
@@ -161,9 +157,9 @@ MIT. See [LICENSE](LICENSE).
 
 - [idiolect]: lexicon family, codegen, record indexer, observer,
   orchestrator. fieldwork is the authoring surface on top.
-- [protolab]: the visual lens editor; export a lens here, upload it
+- [protolab]: the visual lens editor. Export a lens here, upload it
   via fieldwork's Lens Manager.
-- [panproto]: schemas, lenses, protolenses; the foundation under
+- [panproto]: schemas, lenses, protolenses, the foundation under
   both idiolect and protolab.
 - [atproto]: the protocol fieldwork's records publish into.
 

@@ -9,6 +9,12 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.13] - 2026-04-27
+
+### Added
+
+- Community Config now edits the four fields the lexicon defined but the form previously couldn't reach: `coreSchemas` and `coreLenses` (lists of refs the community pins as canonical), `endorsedCommunities` (peer communities recognised as legitimate interlocutors), and `membershipRoll` (at-uri to an externally-maintained membership record for larger communities). Every field is autocompleted via `AtUriAutocomplete` with the right `expectedCollection`, so handles work as shorthand for at-uris everywhere. The bundled `community/with-roll-and-endorsements` and `community/with-core-sets` fixtures are now fully editable instead of just imported. Walkthrough gains a "Core sets and endorsements" step.
+
 ## [0.1.12] - 2026-04-27
 
 ### Added

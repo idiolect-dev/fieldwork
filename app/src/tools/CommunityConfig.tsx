@@ -15,6 +15,8 @@ import { useActiveDid } from "../sessions/placeholders";
 import { HandleSearch } from "../components/HandleSearch";
 import { useActorProfile } from "../sessions/actorProfile";
 import { DatetimeInput } from "../components/DatetimeInput";
+import { AtUriAutocomplete } from "../components/AtUriAutocomplete";
+import { useAtUriPlaceholder } from "../sessions/placeholders";
 
 export function CommunityConfig() {
   const drafts = useWorkspaceStore(useShallow((s) => draftsByKind(s, "community")));
@@ -138,6 +140,41 @@ function CommunityForm({
           <MemberList members={members} onChange={(next) => patch("members", next)} placeholder={memberPlaceholder} />
         </div>
       </Field>
+      <Field label="Membership roll at-uri (optional)">
+        <AtUriAutocomplete
+          value={(body.membershipRoll as string) ?? ""}
+          onChange={(v) => patch("membershipRoll", v || undefined)}
+          placeholder={useAtUriPlaceholder("at://did:plc:.../<membership-roll>")}
+        />
+      </Field>
+      <Field label="Core schemas">
+        <RefList
+          items={Array.isArray(body.coreSchemas) ? (body.coreSchemas as Ref[]) : []}
+          onChange={(next) => patch("coreSchemas", next.length === 0 ? undefined : next)}
+          kind="schema"
+        />
+      </Field>
+      <Field label="Core lenses">
+        <RefList
+          items={Array.isArray(body.coreLenses) ? (body.coreLenses as Ref[]) : []}
+          onChange={(next) => patch("coreLenses", next.length === 0 ? undefined : next)}
+          kind="lens"
+        />
+      </Field>
+      <Field label="Endorsed communities">
+        <AtUriList
+          items={
+            Array.isArray(body.endorsedCommunities)
+              ? (body.endorsedCommunities as string[])
+              : []
+          }
+          onChange={(next) =>
+            patch("endorsedCommunities", next.length === 0 ? undefined : next)
+          }
+          expectedCollection="dev.idiolect.community"
+          placeholderHint="at://did:plc:.../dev.idiolect.community/main"
+        />
+      </Field>
       <div data-walk="community-conventions" className="grid grid-cols-1 gap-4">
       <Field label="Conventions">
         <ConventionsList
@@ -181,6 +218,133 @@ function Field({
       <span className="font-medium">{label}</span>
       {children}
     </label>
+  );
+}
+
+// `dev.idiolect.defs#schemaRef` and `lensRef` share the same shape:
+// `{ uri?: string, cid?: string, ... }`. The form edits `uri`
+// (autocompleted as an at-uri) and preserves any cid set via
+// import roundtrip.
+interface Ref {
+  uri?: string;
+  cid?: string;
+}
+
+function RefList({
+  items,
+  onChange,
+  kind,
+}: {
+  items: Ref[];
+  onChange: (next: Ref[]) => void;
+  kind: "schema" | "lens";
+}) {
+  const expectedCollection =
+    kind === "lens" ? "dev.panproto.schema.lens" : undefined;
+  const placeholder = useAtUriPlaceholder(
+    kind === "lens"
+      ? "at://did:plc:.../dev.panproto.schema.lens/<rkey>"
+      : "at://did:plc:.../<schema-rkey>",
+  );
+  function setUri(i: number, uri: string) {
+    const next = items.map((r, j) => (j === i ? { ...r, uri } : r));
+    onChange(next.filter((r) => r.uri && r.uri.length > 0));
+  }
+  function add() {
+    onChange([...items, { uri: "" }]);
+  }
+  function remove(i: number) {
+    onChange(items.filter((_, j) => j !== i));
+  }
+  const rows = items.length === 0 ? [{ uri: "" }] : items;
+  return (
+    <div className="flex flex-col gap-2">
+      {rows.map((r, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <div className="flex-1">
+            <AtUriAutocomplete
+              value={r.uri ?? ""}
+              onChange={(v) => setUri(i, v)}
+              expectedCollection={expectedCollection}
+              placeholder={placeholder}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => remove(i)}
+            className="text-stone-500 text-xs px-1"
+            title="Remove"
+            disabled={items.length === 0}
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        className="self-start text-xs text-stone-700 px-2 py-1 rounded border border-stone-200 hover:bg-stone-50"
+      >
+        + {kind}
+      </button>
+    </div>
+  );
+}
+
+function AtUriList({
+  items,
+  onChange,
+  expectedCollection,
+  placeholderHint,
+}: {
+  items: string[];
+  onChange: (next: string[]) => void;
+  expectedCollection?: string;
+  placeholderHint: string;
+}) {
+  const placeholder = useAtUriPlaceholder(placeholderHint);
+  function setAt(i: number, v: string) {
+    const next = items.map((u, j) => (j === i ? v : u));
+    onChange(next.filter((u) => u.length > 0));
+  }
+  function add() {
+    onChange([...items, ""]);
+  }
+  function remove(i: number) {
+    onChange(items.filter((_, j) => j !== i));
+  }
+  const rows = items.length === 0 ? [""] : items;
+  return (
+    <div className="flex flex-col gap-2">
+      {rows.map((u, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <div className="flex-1">
+            <AtUriAutocomplete
+              value={u}
+              onChange={(v) => setAt(i, v)}
+              expectedCollection={expectedCollection}
+              placeholder={placeholder}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => remove(i)}
+            className="text-stone-500 text-xs px-1"
+            title="Remove"
+            disabled={items.length === 0}
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        className="self-start text-xs text-stone-700 px-2 py-1 rounded border border-stone-200 hover:bg-stone-50"
+      >
+        + at-uri
+      </button>
+    </div>
   );
 }
 

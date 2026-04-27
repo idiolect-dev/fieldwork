@@ -179,6 +179,11 @@ const FLOWS: Flow[] = [
         target: "[data-walk='community-conventions']",
       },
       {
+        title: "Core sets and endorsements",
+        body: "Pin the schemas and lenses you treat as canonical, plus an external membership roll for bigger communities and other communities you recognise as legitimate interlocutors. All four fields take at-uris, autocompleted from your sessions and bsky's typeahead.",
+        tool: "community",
+      },
+      {
         title: "Publish + lifecycle",
         body: "Export → Publish pushes the community to your PDS. The sidebar's dot turns emerald. Edits flip it to amber and unlock Revert + Delete from PDS in the editor toolbar.",
         tool: "community",

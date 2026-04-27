@@ -9,6 +9,18 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-04-27
+
+### Fixed
+
+- Production build now bundles the `@panproto/core` wasm-bindgen glue and `_bg.wasm` into `dist/assets/` with proper fingerprinting. Previously the deployed site at `idiolect.dev/fieldwork/` 404'd on `panproto_wasm.js` because the package's runtime resolver hides its `import.meta.url` from Vite via string concatenation. We now use the package's documented `Panproto.init(glueModule)` bundler overload, reaching the glue through a project-local Vite `resolve.alias` (the package's `exports` field doesn't expose the subpath). Filed upstream as panproto/panproto#57.
+
+### Added
+
+- Open Graph image (`public/og.png`) and meta tags so links to `idiolect.dev/fieldwork/` render with a card.
+
+## [0.1.0] - 2026-04-27
+
 ### Added
 
 - Initial scaffold: Cargo workspace with `fieldwork-core` and

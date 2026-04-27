@@ -9,6 +9,12 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-04-27
+
+### Fixed
+
+- Walkthrough's centered-modal final step labelled the primary button "Back to hub", but the action just closed the modal. Match the spotlight variant and label it "Done". The secondary "Hub" button still navigates back to the walkthrough hub.
+
 ## [0.1.7] - 2026-04-27
 
 ### Fixed

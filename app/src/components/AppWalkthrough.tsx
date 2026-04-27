@@ -775,7 +775,7 @@ function SpotlightCard({
                 onClick={onNext}
                 className="px-3 py-1 text-sm rounded bg-stone-900 text-white"
               >
-                {isLastStep ? "Back to hub" : "Next"}
+                {isLastStep ? "Done" : "Next"}
               </button>
             }
             secondary={

@@ -1,0 +1,141 @@
+{
+  "lexicon": 1,
+  "id": "dev.idiolect.community",
+  "description": "A group of DIDs that declare shared conventions. Self-constituted per P4: no central roll, no grading of legitimacy. Communities may be small and many.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "description": "A community is a self-constituted group declaring shared schemas, lenses, and conventions. Membership may be listed inline for small communities, or referenced for larger ones.",
+      "record": {
+        "type": "object",
+        "required": ["name", "description", "createdAt"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "description": "Human-readable community name."
+          },
+          "description": {
+            "type": "string",
+            "maxGraphemes": 2000,
+            "description": "Purpose, norms, and scope of the community. Narrative, not machine-interpreted."
+          },
+          "members": {
+            "type": "array",
+            "description": "Inline list of member DIDs, for small communities. Use membershipRoll instead for communities above ~200 members.",
+            "maxLength": 500,
+            "items": {
+              "type": "string",
+              "format": "did"
+            }
+          },
+          "membershipRoll": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT-URI pointing to an externally maintained membership record for larger communities."
+          },
+          "coreSchemas": {
+            "type": "array",
+            "description": "Schemas the community treats as canonical for its purposes.",
+            "items": {
+              "type": "ref",
+              "ref": "dev.idiolect.defs#schemaRef"
+            }
+          },
+          "coreLenses": {
+            "type": "array",
+            "description": "Lenses the community treats as canonical.",
+            "items": {
+              "type": "ref",
+              "ref": "dev.idiolect.defs#lensRef"
+            }
+          },
+          "endorsedCommunities": {
+            "type": "array",
+            "description": "Other communities this community recognises as legitimate interlocutors. Endorsement is not transitive.",
+            "items": {
+              "type": "string",
+              "format": "at-uri"
+            }
+          },
+          "conventions": {
+            "type": "array",
+            "maxLength": 64,
+            "description": "Structured community conventions the decidable subset. Review cadence, verification requirements, deprecation policies. Style/tone norms live in `conventionsText`.",
+            "items": {
+              "type": "union",
+              "refs": [
+                "dev.idiolect.community#conventionReviewCadence",
+                "dev.idiolect.community#conventionVerificationReq",
+                "dev.idiolect.community#conventionDeprecationPolicy"
+              ]
+            }
+          },
+          "conventionsText": {
+            "type": "string",
+            "maxGraphemes": 10000,
+            "description": "Narrative conventions: style guides, tone, conventions not expressible as a structured predicate. Companion to `conventions`."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    },
+    "conventionReviewCadence": {
+      "type": "object",
+      "description": "Expected turnaround for community review of proposed lenses/verifications.",
+      "required": ["maxDays"],
+      "properties": {
+        "maxDays": {
+          "type": "integer",
+          "description": "Maximum business-days expected before a review is posted."
+        },
+        "scope": {
+          "type": "string",
+          "description": "Optional narrowing (e.g. 'lens-review', 'verification-review', 'all')."
+        }
+      }
+    },
+    "conventionVerificationReq": {
+      "type": "object",
+      "description": "A verification the community requires before endorsing a lens.",
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "roundtrip-test",
+            "property-test",
+            "formal-proof",
+            "conformance-test",
+            "static-check",
+            "convergence-preserving"
+          ]
+        },
+        "property": {
+          "type": "ref",
+          "ref": "dev.idiolect.defs#lensProperty",
+          "description": "Optional specific property required."
+        }
+      }
+    },
+    "conventionDeprecationPolicy": {
+      "type": "object",
+      "description": "How the community handles deprecation: minimum notice, replacement requirements.",
+      "required": ["noticePeriodDays"],
+      "properties": {
+        "noticePeriodDays": {
+          "type": "integer",
+          "description": "Minimum days of advance notice before a deprecated lens is removed."
+        },
+        "replacementRequired": {
+          "type": "boolean",
+          "description": "Whether deprecations must point at a replacement lens before publication."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "lexicon": 1,
+  "id": "dev.panproto.vcs.commit",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["repo", "objectHash", "schemaHash", "protocol", "author", "message", "createdAt"],
+        "properties": {
+          "repo": { "type": "string", "format": "at-uri" },
+          "objectHash": { "type": "string", "maxLength": 64 },
+          "schemaHash": { "type": "string", "maxLength": 64 },
+          "parentHashes": {
+            "type": "array",
+            "items": { "type": "string", "maxLength": 64 },
+            "maxLength": 2
+          },
+          "migrationHash": { "type": "string", "maxLength": 64 },
+          "protocol": { "type": "string", "maxLength": 128 },
+          "protocolHash": { "type": "string", "maxLength": 64 },
+          "theoryIds": {
+            "type": "array",
+            "items": { "type": "ref", "ref": "#namedHash" },
+            "maxLength": 1024
+          },
+          "dataHashes": {
+            "type": "array",
+            "items": { "type": "string", "maxLength": 64 },
+            "maxLength": 1024
+          },
+          "complementHashes": {
+            "type": "array",
+            "items": { "type": "string", "maxLength": 64 },
+            "maxLength": 1024
+          },
+          "editLogHashes": {
+            "type": "array",
+            "items": { "type": "string", "maxLength": 64 },
+            "maxLength": 1024
+          },
+          "cstComplementHashes": {
+            "type": "array",
+            "items": { "type": "string", "maxLength": 64 },
+            "maxLength": 1024
+          },
+          "timestamp": { "type": "integer" },
+          "author": { "type": "string", "maxLength": 256 },
+          "message": { "type": "string", "maxLength": 100000 },
+          "renames": {
+            "type": "array",
+            "items": { "type": "ref", "ref": "#siteRename" },
+            "maxLength": 200
+          },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    },
+    "siteRename": {
+      "type": "object",
+      "required": ["oldName", "newName"],
+      "properties": {
+        "oldName": { "type": "string", "maxLength": 256 },
+        "newName": { "type": "string", "maxLength": 256 }
+      }
+    },
+    "namedHash": {
+      "type": "object",
+      "required": ["name", "objectHash"],
+      "properties": {
+        "name": { "type": "string", "maxLength": 256 },
+        "objectHash": { "type": "string", "maxLength": 64 }
+      }
+    }
+  }
+}

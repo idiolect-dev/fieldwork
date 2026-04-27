@@ -1,0 +1,469 @@
+{
+  "lexicon": 1,
+  "id": "dev.idiolect.defs",
+  "description": "Shared types for the dev.idiolect.* Lexicon family. Covers (a) cross-cutting reference shapes (lens/schema/encounter refs, tool identity, visibility), and (b) content-theory types (purpose, lensProperty, evidence, caveat) shared across multiple records. Record-specific combinator trees (condition, eligibility, constraint, convention) live in their respective record lexicons.",
+  "defs": {
+    "visibility": {
+      "type": "string",
+      "description": "Visibility scope for a record. community-scoped semantics are reserved but deferred for v1; records with visibility=community-scoped must not be served to parties outside the named community once the substrate supports scope enforcement.",
+      "enum": [
+        "public-detailed",
+        "public-minimal",
+        "public-aggregate-only",
+        "community-scoped",
+        "private"
+      ]
+    },
+    "schemaRef": {
+      "type": "object",
+      "description": "Reference to a schema. Either an at-uri pointing to a schema record or a content-addressed hash; at least one must be present.",
+      "required": [],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT-URI pointing to a schema record, when addressable via atproto."
+        },
+        "cid": {
+          "type": "cid-link",
+          "description": "Content-addressed hash of the schema, when tracked in a content-addressed store such as panproto-vcs."
+        },
+        "language": {
+          "type": "string",
+          "description": "Schema language identifier, e.g. 'atproto-lexicon', 'postgres-sql', 'protobuf', 'graphql', 'json-schema'."
+        }
+      }
+    },
+    "lensRef": {
+      "type": "object",
+      "description": "Reference to a lens (translation). Either an at-uri or a content-addressed hash; at least one must be present.",
+      "required": [],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT-URI pointing to a lens record."
+        },
+        "cid": {
+          "type": "cid-link",
+          "description": "Content-addressed hash of the lens."
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["unidirectional", "bidirectional"],
+          "description": "Whether the lens is invertible."
+        }
+      }
+    },
+    "encounterRef": {
+      "type": "object",
+      "description": "Reference to a prior encounter record. at-uri is canonical; cid pins the exact revision.",
+      "required": ["uri"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri"
+        },
+        "cid": {
+          "type": "cid-link"
+        }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "description": "Identity and version of a tool used by a verifier or observer.",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Canonical tool name, e.g. 'panproto', 'coq', 'tlaplus', 'z3', 'nextest'."
+        },
+        "version": {
+          "type": "string",
+          "description": "Tool version string (semver when applicable)."
+        },
+        "commit": {
+          "type": "string",
+          "description": "Optional source commit or build identifier."
+        }
+      }
+    },
+    "vocabRef": {
+      "type": "object",
+      "description": "Reference to a community-published action vocabulary. Determines how 'action' identifiers are resolved and subsumed.",
+      "required": [],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT-URI pointing to the vocabulary record."
+        },
+        "cid": {
+          "type": "cid-link",
+          "description": "Content hash pinning a specific vocabulary revision."
+        }
+      }
+    },
+    "use": {
+      "type": "object",
+      "description": "Compound 'what was done, on what material, for what end, by which actor.' ThUse content-theory shape, reused across records whose structured subject is an action performed, desired, endorsed, or prohibited.",
+      "required": ["action"],
+      "properties": {
+        "action": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "Action identifier, resolved against `actionVocabulary` (or the implicit default when omitted). Examples: 'train_model', 'annotate', 'archive'."
+        },
+        "material": {
+          "type": "ref",
+          "ref": "#materialSpec",
+          "description": "What is being acted on."
+        },
+        "purpose": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "The end the action serves, resolved against `purposeVocabulary` when present. Examples: 'commercial', 'non_commercial', 'academic', 'any_purpose'."
+        },
+        "actor": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "Who ultimately performs or benefits from the action. Examples: 'researchers', 'students', 'production_users'."
+        },
+        "actionVocabulary": {
+          "type": "ref",
+          "ref": "#vocabRef",
+          "description": "Vocabulary the `action` identifier resolves against. Omit to use a consumer-chosen default."
+        },
+        "purposeVocabulary": {
+          "type": "ref",
+          "ref": "#vocabRef",
+          "description": "Vocabulary the `purpose` identifier resolves against. Omit to use a consumer-chosen default."
+        }
+      }
+    },
+    "materialSpec": {
+      "type": "object",
+      "description": "Description of the material a purpose operates on. scope is a community-defined tag; uri optionally pins a specific corpus or dataset.",
+      "required": [],
+      "properties": {
+        "scope": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "Community-defined material scope (e.g. 'classroom_materials', 'production_logs', 'scraped_corpus')."
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional pointer to the specific dataset or corpus."
+        }
+      }
+    },
+    "lensProperty": {
+      "type": "union",
+      "description": "What a verification actually asserts. Each verification kind has its own statement shape. Consumers (proof checkers, PBT runners, conformance runners) dispatch on the tagged variant.",
+      "refs": [
+        "#lpRoundtrip",
+        "#lpGenerator",
+        "#lpTheorem",
+        "#lpConformance",
+        "#lpChecker",
+        "#lpConvergence",
+        "#lpCoercionLaw"
+      ]
+    },
+    "lpRoundtrip": {
+      "type": "object",
+      "description": "Roundtrip domain: the input set across which lens ∘ unlens is claimed to be the identity.",
+      "required": ["domain"],
+      "properties": {
+        "domain": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "Symbolic description of the input set (e.g. 'all valid UD-2.14 sentences', 'records with lengths ≤ 1024')."
+        },
+        "generator": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional pointer to a generator that enumerates the domain."
+        }
+      }
+    },
+    "lpGenerator": {
+      "type": "object",
+      "description": "Property-based test generator spec: what the PBT runner should sample.",
+      "required": ["spec"],
+      "properties": {
+        "spec": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "Generator specification. Format is generator-runner-specific; may be a proptest Strategy reference, a Hypothesis strategy, or a QuickCheck Arbitrary."
+        },
+        "runner": {
+          "type": "string",
+          "description": "Name of the PBT runtime (e.g. 'proptest', 'hypothesis', 'quickcheck')."
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Optional seed for reproducibility."
+        }
+      }
+    },
+    "lpTheorem": {
+      "type": "object",
+      "description": "Formal theorem statement: the property expressed in a proof-assistant vocabulary.",
+      "required": ["statement"],
+      "properties": {
+        "statement": {
+          "type": "string",
+          "maxLength": 4000,
+          "description": "The theorem statement, verbatim, in the declared `system` syntax."
+        },
+        "system": {
+          "type": "string",
+          "description": "Proof system (e.g. 'coq', 'lean4', 'agda', 'tlaplus', 'z3')."
+        },
+        "freeVariables": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Names of free variables the statement quantifies over."
+        }
+      }
+    },
+    "lpConformance": {
+      "type": "object",
+      "description": "Conformance standard identifier. A conformance runner matches on name + version, optionally narrowed to named clauses.",
+      "required": ["standard", "version"],
+      "properties": {
+        "standard": {
+          "type": "string",
+          "description": "Standard name or identifier, e.g. 'iso-8601', 'rfc-3339', 'en-pos-v2.1'."
+        },
+        "version": { "type": "string" },
+        "clauses": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Optional subset of the standard's clauses the verification covers."
+        }
+      }
+    },
+    "lpChecker": {
+      "type": "object",
+      "description": "Static-check configuration: which checker and which ruleset the verification covers.",
+      "required": ["checker"],
+      "properties": {
+        "checker": {
+          "type": "string",
+          "description": "Static-checker identifier (e.g. 'panproto-check', 'clippy', 'tsc-strict')."
+        },
+        "ruleset": {
+          "type": "string",
+          "description": "Named ruleset, configuration preset, or lint family."
+        },
+        "version": { "type": "string" }
+      }
+    },
+    "lpConvergence": {
+      "type": "object",
+      "description": "Convergence claim: a property preserved under repeated application of the lens, appropriate for fixed-point or reconciliation lenses.",
+      "required": ["property"],
+      "properties": {
+        "property": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Symbolic name or description of the preserved property."
+        },
+        "boundSteps": {
+          "type": "integer",
+          "description": "Optional bound on steps to reach fixpoint."
+        }
+      }
+    },
+    "lpCoercionLaw": {
+      "type": "object",
+      "description": "Coercion-law claim: every theory inhabitant the lens carries across a translation must satisfy the named standard's coercion laws (e.g. signature preservation, axiom soundness). Surfaced from panproto's verifyCoercionLaws xrpc; violations turn the verification falsified.",
+      "required": ["standard"],
+      "properties": {
+        "standard": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "Identifier of the coercion-law standard the lens is being checked against."
+        },
+        "version": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Optional version of the standard, useful when a standard evolves and the verification pins to a specific revision."
+        },
+        "violationThreshold": {
+          "type": "integer",
+          "description": "Optional cap on the number of violations a runner may report before falsifying the claim. Acts as a runtime parameter, not a property assertion."
+        }
+      }
+    },
+    "evidence": {
+      "type": "union",
+      "description": "Structured evidence for a retrospection finding. Complements the narrative `detail` field on finding; kind=other may omit evidence entirely.",
+      "refs": [
+        "#evidenceDivergence",
+        "#evidenceLoss",
+        "#evidenceMismatch"
+      ]
+    },
+    "evidenceDivergence": {
+      "type": "object",
+      "description": "For kind=merge-divergence: two translation paths that should have converged but produced different outputs.",
+      "required": ["pathA", "pathB"],
+      "properties": {
+        "pathA": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#lensRef" },
+          "description": "Sequence of lenses composed in path A."
+        },
+        "pathB": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#lensRef" },
+          "description": "Sequence of lenses composed in path B."
+        },
+        "witnessInput": {
+          "type": "cid-link",
+          "description": "Optional cid of an input where the two paths diverge."
+        }
+      }
+    },
+    "evidenceLoss": {
+      "type": "object",
+      "description": "For kind=data-loss: a source-schema field unrepresented in the target after translation.",
+      "required": ["sourceField"],
+      "properties": {
+        "sourceField": {
+          "type": "string",
+          "description": "Dotted path into the source schema identifying the lost field."
+        },
+        "targetSchema": {
+          "type": "ref",
+          "ref": "#schemaRef",
+          "description": "Target schema under which the loss was observed."
+        },
+        "witnessInput": { "type": "cid-link" }
+      }
+    },
+    "evidenceMismatch": {
+      "type": "object",
+      "description": "For kind=reconciliation-mismatch: two records that should reconcile under the lens but do not.",
+      "required": [],
+      "properties": {
+        "leftRecord": { "type": "cid-link" },
+        "rightRecord": { "type": "cid-link" },
+        "expectedEqualityOn": {
+          "type": "string",
+          "description": "Dotted path or projection under which equality was expected."
+        }
+      }
+    },
+    "caveat": {
+      "type": "object",
+      "description": "Structured caveat on a recommendation: a known failure mode consumers can match on. Paired with `caveatsText` on the record for narrative context.",
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "description": "Short failure-mode identifier (e.g. 'loses-dialect-markers', 'degrades-on-long-inputs', 'requires-closed-world')."
+        },
+        "affects": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Dotted paths or field names the caveat applies to."
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "warn", "error"],
+          "description": "Advisory severity."
+        }
+      }
+    },
+    "basis": {
+      "type": "union",
+      "description": "Structured grounding for an attitudinal claim: what the holder's assertion/endorsement/belief rests on. Useful when the record's author is not the holder (third-party attestation) or when the grounds are externally anchored.",
+      "refs": [
+        "#basisSelfAsserted",
+        "#basisCommunityPolicy",
+        "#basisExternalSignal",
+        "#basisDerivedFromRecord"
+      ]
+    },
+    "basisSelfAsserted": {
+      "type": "object",
+      "description": "The holder is asserting directly, with no external grounding claimed. This is the default when a record carries no `basis`.",
+      "properties": {}
+    },
+    "basisCommunityPolicy": {
+      "type": "object",
+      "description": "Grounded in a community's published policy. `community` is the community record; `policyUri` optionally names the specific policy document.",
+      "required": ["community"],
+      "properties": {
+        "community": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT-URI of the community record whose policy grounds this record."
+        },
+        "policyUri": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional pointer to the specific policy document."
+        }
+      }
+    },
+    "basisExternalSignal": {
+      "type": "object",
+      "description": "Grounded in something outside ATProto — a public license, an external policy, a standards document, a statement on another network.",
+      "required": ["url"],
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Pointer to the external signal."
+        },
+        "signalType": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "Short identifier for the signal kind (e.g. 'license:CC-BY-NC-4.0', 'robots.txt', 'policy:iso-8601')."
+        },
+        "description": {
+          "type": "string",
+          "maxGraphemes": 1000,
+          "description": "Optional narrative of how the signal grounds the claim."
+        }
+      }
+    },
+    "basisDerivedFromRecord": {
+      "type": "object",
+      "description": "Grounded in another record on ATProto. `source` pins the exact version via strong ref; `inferenceRule` names how this record derives from it (e.g. 'translates', 'aggregates', 'classifies').",
+      "required": ["source"],
+      "properties": {
+        "source": {
+          "type": "ref",
+          "ref": "#strongRecordRef",
+          "description": "Strong reference (AT-URI + CID) to the record this claim is derived from."
+        },
+        "inferenceRule": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "Identifier of the inference rule (e.g. 'classifier:purpose-v1', 'lens:v1-to-v2', 'aggregation:byte-mean')."
+        }
+      }
+    },
+    "strongRecordRef": {
+      "type": "object",
+      "description": "Strong reference to an ATProto record: AT-URI plus CID. Parallel to com.atproto.repo.strongRef but repeated here so the defs tree is self-contained.",
+      "required": ["uri", "cid"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri"
+        },
+        "cid": {
+          "type": "cid-link"
+        }
+      }
+    }
+  }
+}

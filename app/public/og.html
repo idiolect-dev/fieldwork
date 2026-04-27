@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>fieldwork OG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        oklch(0.15 0.01 75);
+    --grid:      oklch(0.24 0.01 75);
+    --text:      #f1eee9;
+    --muted:     #a89e90;
+    --rule:      #d6cfbe;
+    --paper:     #f1eee9;
+    --paper-2:   #e9e3d6;
+    --dialect:   #e8a020;
+    --vocab:     #4a90d9;
+    --community: #4caf50;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    background: var(--bg);
+    color: var(--text);
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle, var(--grid) 1.4px, transparent 1.4px);
+    background-size: 28px 28px;
+    z-index: 0;
+  }
+  .vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 60% 50%, transparent 30%, rgba(0,0,0,0.55) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Three abstract index cards, fanned. */
+  .stack {
+    position: absolute;
+    right: 90px; top: 50%;
+    transform: translateY(-50%);
+    width: 540px; height: 460px;
+    z-index: 2;
+  }
+  .card {
+    position: absolute;
+    width: 360px; height: 240px;
+    border-radius: 10px;
+    background: var(--paper);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.04) inset,
+      0 14px 40px rgba(0,0,0,0.45),
+      0 6px 18px rgba(0,0,0,0.35);
+  }
+  .card .tab {
+    position: absolute;
+    top: -10px; left: 36px;
+    width: 88px; height: 14px;
+    border-radius: 3px;
+  }
+  .card .rules {
+    position: absolute;
+    top: 64px; left: 36px; right: 36px;
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .card .rules .r {
+    height: 4px; border-radius: 2px;
+    background: var(--rule);
+  }
+  .card .rules .r:nth-child(1) { width: 78%; }
+  .card .rules .r:nth-child(2) { width: 64%; }
+  .card .rules .r:nth-child(3) { width: 86%; }
+  .card .rules .r:nth-child(4) { width: 52%; }
+  .card .rules .r:nth-child(5) { width: 70%; }
+  .card .label {
+    position: absolute;
+    top: 24px; left: 36px;
+    font-size: 16px; font-weight: 700;
+    color: #1c1917; letter-spacing: -0.01em;
+  }
+
+  /* Card 1 - back, blue/vocab */
+  .c1 {
+    left: 0; top: 30px;
+    transform: rotate(-8deg);
+    background: var(--paper-2);
+  }
+  .c1 .tab { background: var(--vocab); }
+
+  /* Card 2 - middle, green/community */
+  .c2 {
+    left: 90px; top: 110px;
+    transform: rotate(2deg);
+  }
+  .c2 .tab { background: var(--community); }
+
+  /* Card 3 - front, orange/dialect */
+  .c3 {
+    left: 180px; top: 200px;
+    transform: rotate(-3deg);
+  }
+  .c3 .tab { background: var(--dialect); }
+
+  /* Hero block, bottom-left, like protolab */
+  .hero {
+    position: absolute; left: 80px; bottom: 64px; z-index: 4;
+    display: flex; align-items: center; gap: 22px;
+  }
+  .mark {
+    position: relative;
+    width: 64px; height: 64px;
+    background: #0c0b0a;
+    border-radius: 11px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.55);
+  }
+  .mark .m-card {
+    position: absolute;
+    top: 14px; left: 12px;
+    width: 40px; height: 38px;
+    background: var(--paper);
+    border-radius: 3px;
+  }
+  .mark .m-tab {
+    position: absolute;
+    top: 10px; left: 22px;
+    width: 20px; height: 8px;
+    background: var(--dialect);
+    border-radius: 2px;
+  }
+  .mark .m-r {
+    position: absolute;
+    background: var(--rule);
+    height: 2px; border-radius: 1px;
+  }
+  .mark .m-r1 { top: 28px; left: 18px; width: 28px; }
+  .mark .m-r2 { top: 36px; left: 18px; width: 22px; }
+  .mark .m-r3 { top: 44px; left: 18px; width: 18px; }
+
+  .word {
+    font-weight: 700; font-size: 64px; line-height: 1;
+    letter-spacing: -0.035em;
+  }
+
+  .tag {
+    position: absolute; left: 80px; bottom: 28px; z-index: 4;
+    color: var(--muted); font-size: 19px; font-weight: 500;
+  }
+  .tag em { font-style: normal; color: var(--text); }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="vignette"></div>
+
+  <div class="stack">
+    <div class="card c1">
+      <div class="tab"></div>
+      <div class="label">Vocabulary</div>
+      <div class="rules">
+        <div class="r"></div><div class="r"></div><div class="r"></div>
+        <div class="r"></div><div class="r"></div>
+      </div>
+    </div>
+    <div class="card c2">
+      <div class="tab"></div>
+      <div class="label">Community</div>
+      <div class="rules">
+        <div class="r"></div><div class="r"></div><div class="r"></div>
+        <div class="r"></div><div class="r"></div>
+      </div>
+    </div>
+    <div class="card c3">
+      <div class="tab"></div>
+      <div class="label">Dialect</div>
+      <div class="rules">
+        <div class="r"></div><div class="r"></div><div class="r"></div>
+        <div class="r"></div><div class="r"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="mark">
+      <div class="m-card"></div>
+      <div class="m-tab"></div>
+      <div class="m-r m-r1"></div>
+      <div class="m-r m-r2"></div>
+      <div class="m-r m-r3"></div>
+    </div>
+    <div class="word">fieldwork</div>
+  </div>
+  <div class="tag">a workshop for <em>community schema curation</em></div>
+</body>
+</html>

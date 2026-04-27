@@ -1,0 +1,13 @@
+{
+  "$nsid": "dev.idiolect.verification",
+  "lens":       { "uri": "at://did:plc:example/dev.idiolect.lens/abc" },
+  "kind":       "roundtrip-test",
+  "verifier":   "did:plc:verifier",
+  "tool":       { "name": "nextest", "version": "0.9.87" },
+  "property": {
+    "$type":  "dev.idiolect.defs#lpRoundtrip",
+    "domain": "all valid UD-2.14 sentences"
+  },
+  "result":     "holds",
+  "occurredAt": "2026-04-19T00:00:00.000Z"
+}

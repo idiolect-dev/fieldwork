@@ -1,0 +1,33 @@
+[workspace]
+members = [
+    "crates/fieldwork-core",
+    "crates/fieldwork-wasm",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/idiolect-dev/fieldwork"
+
+[workspace.dependencies]
+# fieldwork-core uses idiolect's generated record types directly so
+# its in-memory drafts can serde round-trip with whatever the user
+# pulls off a PDS.
+idiolect-records = { git = "https://github.com/idiolect-dev/idiolect.git", tag = "v0.5.0" }
+
+# Internal crates
+fieldwork-core = { path = "crates/fieldwork-core" }
+
+# WASM
+wasm-bindgen = "0.2"
+serde-wasm-bindgen = "0.6"
+js-sys = "0.3"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Error handling
+thiserror = "2"

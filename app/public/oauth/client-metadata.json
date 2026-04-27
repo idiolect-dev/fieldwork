@@ -1,0 +1,17 @@
+{
+  "client_id": "https://idiolect.dev/fieldwork/oauth/client-metadata.json",
+  "client_name": "fieldwork",
+  "client_uri": "https://idiolect.dev/fieldwork/",
+  "logo_uri": "https://idiolect.dev/fieldwork/icon.png",
+  "tos_uri": "https://idiolect.dev/fieldwork/",
+  "policy_uri": "https://idiolect.dev/fieldwork/",
+  "redirect_uris": [
+    "https://idiolect.dev/fieldwork/oauth/callback"
+  ],
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "application_type": "web",
+  "token_endpoint_auth_method": "none",
+  "dpop_bound_access_tokens": true,
+  "scope": "atproto repo:dev.idiolect.dialect repo:dev.idiolect.vocab repo:dev.idiolect.community repo:dev.idiolect.recommendation repo:dev.idiolect.belief repo:dev.idiolect.encounter repo:dev.idiolect.correction repo:dev.idiolect.observation repo:dev.idiolect.retrospection repo:dev.idiolect.verification repo:dev.idiolect.bounty"
+}

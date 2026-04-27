@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>fieldwork — completing sign-in…</title>
+    <script type="module">
+      // The OAuth callback URL receives the authorization code and
+      // hands control back to the SPA. The BrowserOAuthClient picks
+      // up the code from `window.location` automatically the next
+      // time `init()` runs in the SPA, so we redirect back to the
+      // app shell with the query params preserved.
+      const target = "../..";
+      const params = window.location.search;
+      const hash = window.location.hash;
+      window.location.replace(target + params + hash);
+    </script>
+  </head>
+  <body>
+    <p>Completing sign-in… you should be redirected.</p>
+    <p>If not, <a href="../..">return to fieldwork</a>.</p>
+  </body>
+</html>

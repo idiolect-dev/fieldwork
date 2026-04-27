@@ -1,0 +1,20 @@
+{
+  "$nsid": "dev.idiolect.bounty",
+  "requester":  "did:plc:requester",
+  "wants": {
+    "$type":  "dev.idiolect.bounty#wantLens",
+    "source": { "language": "postgres-sql" },
+    "target": { "language": "atproto-lexicon" }
+  },
+  "constraints": [
+    {
+      "$type":  "dev.idiolect.bounty#constraintConformance",
+      "kind":   "roundtrip-test"
+    },
+    {
+      "$type":    "dev.idiolect.bounty#constraintLicense",
+      "spdx":     "MIT OR Apache-2.0"
+    }
+  ],
+  "occurredAt": "2026-04-19T00:00:00.000Z"
+}

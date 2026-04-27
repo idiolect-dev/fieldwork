@@ -9,6 +9,16 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-04-27
+
+### Fixed
+
+- OAuth `invalid_scope` for `repo:dev.panproto.schema.lens` on the deployed site. The Lens Manager added the scope to `REPO_SCOPES`, which the dev-only loopback `client_id` synthesises automatically, but production reads the static `app/public/oauth/client-metadata.json` whose `scope` string was hand-rolled and drifted. Added the missing scope and a vitest parity test asserting the static metadata declares every `REPO_SCOPES` entry. CI now runs the test on every push.
+
+### Changed
+
+- README: drop the broken `CONTRIBUTING.md` link, replace remaining em dashes and semicolons with periods, parentheses, and commas to match the in-app punctuation pass.
+
 ## [0.1.2] - 2026-04-27
 
 ### Fixed

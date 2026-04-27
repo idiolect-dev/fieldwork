@@ -1,31 +1,20 @@
 // Singleton panproto initialiser.
 //
-// The package's default `Panproto.init()` resolves its glue + wasm
-// via `import.meta.url`-relative dynamic imports, which the
-// production Vite build does not emit as sibling assets (the
-// `panproto_wasm.js` URL ends up 404ing under `/fieldwork/assets/`).
-// Importing the glue module explicitly lets vite-plugin-wasm
-// fingerprint both the glue and its `panproto_wasm_bg.wasm`
-// sibling into the build, and we hand the pre-imported module to
-// `Panproto.init()` so the package skips its own resolver.
-
-// Singleton panproto initialiser.
-//
-// `Panproto.init()` has a documented bundler overload that accepts a
-// pre-imported wasm-bindgen glue module. We use that path so Vite +
-// vite-plugin-wasm own the glue + `_bg.wasm` bundling and the
+// `Panproto.init()` has a documented bundler overload that accepts
+// a pre-imported wasm-bindgen glue module. We use that path so Vite
+// + vite-plugin-wasm own the glue + `_bg.wasm` bundling and the
 // resulting assets get fingerprinted into `dist/assets/` like every
 // other build artifact. The package's own runtime resolver (which
-// hides its `import.meta.url` from Vite via string concat) is
-// bypassed entirely.
+// hides `import.meta.url` from Vite via string concat) is bypassed.
 //
-// `@panproto-glue` is a Vite resolve.alias defined in
-// `vite.config.ts` pointing at
-// `node_modules/@panproto/core/dist/panproto_wasm.js`; the type
-// shape is declared in `src/vite-env.d.ts`.
+// `@panproto-glue` is a Vite resolve.alias for
+// `node_modules/@panproto/core/dist/panproto_wasm.js`; its ambient
+// type lives in `src/vite-env.d.ts`. The wasm-bindgen JS file
+// emits `export { __wbg_init as default, ...rust_fn_exports }`, so
+// the ESM namespace shape matches `WasmGlueModule` field for field.
 
-import { Panproto } from "@panproto/core";
-import panprotoGlue from "@panproto-glue";
+import { Panproto, type WasmGlueModule } from "@panproto/core";
+import * as panprotoGlue from "@panproto-glue";
 
 let _panproto: Panproto | null = null;
 let _initPromise: Promise<Panproto> | null = null;
@@ -33,7 +22,7 @@ let _initPromise: Promise<Panproto> | null = null;
 export async function initPanproto(): Promise<Panproto> {
   if (_panproto) return _panproto;
   if (_initPromise) return _initPromise;
-  _initPromise = Panproto.init(panprotoGlue).then((p) => {
+  _initPromise = Panproto.init(panprotoGlue as WasmGlueModule).then((p) => {
     _panproto = p;
     return p;
   });

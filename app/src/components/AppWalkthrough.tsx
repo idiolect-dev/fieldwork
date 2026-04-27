@@ -755,7 +755,7 @@ function Footer({
   secondary: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between px-5 pb-5 pt-2 gap-3 border-t border-stone-100">
+    <div className="flex flex-wrap items-center justify-between px-5 pb-5 pt-2 gap-x-3 gap-y-2 border-t border-stone-100">
       <label className="flex items-center gap-2 text-xs text-stone-600 cursor-pointer">
         <input
           type="checkbox"
@@ -764,7 +764,7 @@ function Footer({
         />
         Don't show again
       </label>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap justify-end">
         {secondary}
         {primary ?? (
           <button
@@ -938,14 +938,77 @@ function SpotlightCard({
     );
   }
 
-  // Position the card below the target if there's room, else above.
-  const cardWidth = 380;
-  const cardEstHeight = 220;
+  // On phone-class viewports the spotlight card can't reasonably
+  // float next to the target — there isn't enough horizontal room
+  // and a fixed `top` would frequently land under the on-screen
+  // keyboard. Pin to the bottom of the viewport as a sheet, full
+  // width minus a small margin, regardless of where the target is.
+  // The spotlight ring still tracks the target above.
   const margin = 16;
   const viewportH =
     typeof window !== "undefined" ? window.innerHeight : 800;
   const viewportW =
     typeof window !== "undefined" ? window.innerWidth : 1200;
+  const isPhone = viewportW < 640;
+
+  if (isPhone) {
+    return (
+      <div
+        className="absolute left-0 right-0 bottom-0 p-3 pointer-events-auto"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="bg-white border border-stone-200 rounded-xl shadow-2xl flex flex-col">
+          <Header title={headline} counter={counter} onClose={onClose} />
+          <div className="px-5 pb-3">
+            <h4 className="font-medium text-stone-800 mb-1">{title}</h4>
+            <p className="text-sm text-stone-700 leading-relaxed">{body}</p>
+          </div>
+          <Footer
+            onClose={onClose}
+            dontShow={dontShow}
+            setDontShow={setDontShow}
+            primary={
+              <button
+                type="button"
+                onClick={onNext}
+                className="px-3 py-1 text-sm rounded bg-stone-900 text-white whitespace-nowrap"
+              >
+                {isLastStep ? "Done" : "Next"}
+              </button>
+            }
+            secondary={
+              <>
+                <button
+                  type="button"
+                  onClick={onBackToHub}
+                  className="px-3 py-1 text-sm rounded text-stone-600 whitespace-nowrap"
+                  title="Back to walkthrough hub"
+                >
+                  Hub
+                </button>
+                {onPrev && (
+                  <button
+                    type="button"
+                    onClick={onPrev}
+                    className="px-3 py-1 text-sm rounded border border-stone-300 whitespace-nowrap"
+                  >
+                    Back
+                  </button>
+                )}
+              </>
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop: position the card next to the target, clamped to the
+  // viewport.
+  const cardWidth = 380;
+  const cardEstHeight = 220;
 
   const below = rect.top + rect.height + margin;
   const fitsBelow = below + cardEstHeight < viewportH;

@@ -9,6 +9,13 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.16] - 2026-04-27
+
+### Changed
+
+- Mobile sidebar collapses to a single-row header bar by default and expands inline up to 60vh when tapped. Previously sat above the editor with a fixed 64-row crop, eating most of the viewport for a list whose first few entries were the only ones visible. Same pattern for the Guidance pane and the Lexicon Browser's lexicon list. On md+ everything renders as before.
+- Walkthrough spotlight card pins to the bottom of the viewport as a sheet on phones (< 640px) instead of trying to float a 380px-wide card next to the target. Clicking a record in the lexicon browser sidebar auto-collapses the list on mobile so the user lands on the doc viewer. Walkthrough footer wraps when the buttons + checkbox can't fit on one line.
+
 ## [0.1.15] - 2026-04-27
 
 ### Changed

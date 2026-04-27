@@ -58,8 +58,8 @@ export function GuidancePane({ draft }: { draft: Draft | null }) {
     : null;
 
   return (
-    <aside data-walk="guidance" className="md:w-80 md:border-l md:border-stone-200 bg-stone-50 px-4 py-4 overflow-auto border-t md:border-t-0 border-stone-200 md:shrink-0">
-      <h3 className="font-semibold tracking-tight text-stone-700 text-sm mb-3">
+    <CollapsibleGuidance>
+      <h3 className="font-semibold tracking-tight text-stone-700 text-sm mb-3 hidden md:block">
         Guidance
       </h3>
       {!draft ? (
@@ -108,6 +108,35 @@ export function GuidancePane({ draft }: { draft: Draft | null }) {
           )}
         </>
       )}
+    </CollapsibleGuidance>
+  );
+}
+
+// Collapsed-by-default header bar on mobile, fixed-width pane on
+// md+. The previous layout sat below the editor with a fixed
+// height and the validation ribbon was the most-buried piece of
+// information on phones.
+function CollapsibleGuidance({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <aside
+      data-walk="guidance"
+      className="md:w-80 md:border-l md:border-stone-200 bg-stone-50 md:px-4 md:py-4 md:overflow-auto border-t md:border-t-0 border-stone-200 md:shrink-0"
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="md:hidden w-full flex items-center justify-between px-4 py-2 text-stone-700 font-medium text-sm"
+        aria-expanded={open}
+      >
+        <span>Guidance</span>
+        <span className="text-stone-400 text-xs">{open ? "▴" : "▾"}</span>
+      </button>
+      <div
+        className={`${open ? "block" : "hidden"} md:block px-4 pb-4 md:px-0 md:pb-0 max-h-[60vh] md:max-h-none overflow-auto`}
+      >
+        {children}
+      </div>
     </aside>
   );
 }

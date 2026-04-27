@@ -87,56 +87,83 @@ export function LexiconBrowser() {
     [active],
   );
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="flex flex-col md:flex-row md:h-full min-h-0">
-      <aside data-walk="lexicon-list" className="md:w-72 md:border-r md:border-stone-200 bg-stone-50 p-3 overflow-auto border-b md:border-b-0 border-stone-200 md:max-h-none max-h-64 md:shrink-0">
-        <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-semibold">Lexicon Browser</h2>
-          <WalkthroughTrigger flow="lexicon" />
-        </div>
-        <input
-          type="text"
-          placeholder="filter loaded lexicons…"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="w-full px-2 py-1 border border-stone-300 rounded text-sm mb-3"
-        />
-        <div className="mb-3">
-          <GardenSearch onResolve={ingestFromGarden} />
-        </div>
-        <label className="block text-sm mb-3">
-          <span className="text-stone-700 font-medium">Import lexicon JSON:</span>
+      <aside
+        data-walk="lexicon-list"
+        className="md:w-72 md:border-r md:border-stone-200 bg-stone-50 md:p-3 md:overflow-auto border-b md:border-b-0 border-stone-200 md:shrink-0"
+      >
+        <button
+          type="button"
+          onClick={() => setSidebarOpen((o) => !o)}
+          className="md:hidden w-full flex items-center justify-between px-3 py-2 text-stone-700 font-medium text-sm"
+          aria-expanded={sidebarOpen}
+        >
+          <span>
+            Lexicons{active ? `: ${active.nsid}` : ""}
+          </span>
+          <span className="text-stone-400 text-xs">
+            {sidebarOpen ? "▴" : "▾"}
+          </span>
+        </button>
+        <div
+          className={`${
+            sidebarOpen ? "block" : "hidden"
+          } md:block px-3 pb-3 md:px-0 md:pb-0 max-h-[60vh] md:max-h-none overflow-auto`}
+        >
+          <div className="hidden md:flex items-center gap-2 mb-3">
+            <h2 className="text-sm font-semibold">Lexicon Browser</h2>
+            <WalkthroughTrigger flow="lexicon" />
+          </div>
           <input
-            type="file"
-            accept="application/json,.json"
-            className="block mt-1 text-xs"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) importLexiconFile(f);
-            }}
+            type="text"
+            placeholder="filter loaded lexicons…"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="w-full px-2 py-1 border border-stone-300 rounded text-sm mb-3"
           />
-        </label>
-        <ul className="text-sm">
-          {visible.map((e) => (
-            <li
-              key={e.nsid}
-              onClick={() => setActiveNsid(e.nsid)}
-              title={e.nsid}
-              className={`px-2 py-1 rounded cursor-pointer truncate ${
-                activeNsid === e.nsid
-                  ? "bg-stone-900 text-white"
-                  : "hover:bg-stone-200 text-stone-700"
-              }`}
-            >
-              <span className="font-mono text-xs">{e.nsid}</span>
-              {e.source !== "bundled" && (
-                <span className="ml-1 text-stone-400 text-[10px]">
-                  ({e.source})
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
+          <div className="mb-3">
+            <GardenSearch onResolve={ingestFromGarden} />
+          </div>
+          <label className="block text-sm mb-3">
+            <span className="text-stone-700 font-medium">Import lexicon JSON:</span>
+            <input
+              type="file"
+              accept="application/json,.json"
+              className="block mt-1 text-xs"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) importLexiconFile(f);
+              }}
+            />
+          </label>
+          <ul className="text-sm">
+            {visible.map((e) => (
+              <li
+                key={e.nsid}
+                onClick={() => {
+                  setActiveNsid(e.nsid);
+                  setSidebarOpen(false);
+                }}
+                title={e.nsid}
+                className={`px-2 py-1 rounded cursor-pointer truncate ${
+                  activeNsid === e.nsid
+                    ? "bg-stone-900 text-white"
+                    : "hover:bg-stone-200 text-stone-700"
+                }`}
+              >
+                <span className="font-mono text-xs">{e.nsid}</span>
+                {e.source !== "bundled" && (
+                  <span className="ml-1 text-stone-400 text-[10px]">
+                    ({e.source})
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
       </aside>
       <section className="flex-1 p-4 overflow-auto">
         {active ? (

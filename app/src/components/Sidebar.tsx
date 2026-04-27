@@ -68,16 +68,54 @@ export function Sidebar() {
 
 function LensSidebar() {
   return (
-    <aside
-      data-walk="sidebar"
-      className="md:w-64 md:border-r md:border-stone-200 bg-stone-50 px-3 py-3 md:py-4 flex flex-col gap-4 text-sm border-b md:border-b-0 border-stone-200 md:max-h-none max-h-64 overflow-auto md:overflow-visible md:shrink-0"
-    >
+    <CollapsibleAside dataWalk="sidebar" mobileLabel="Lenses">
       <section data-walk="lens-list" className="flex flex-col gap-2">
-        <h2 className="font-semibold tracking-tight text-stone-700">
+        <h2 className="font-semibold tracking-tight text-stone-700 hidden md:block">
           Lenses in your PDS
         </h2>
         <PublishedList nsid="dev.panproto.schema.lens" />
       </section>
+    </CollapsibleAside>
+  );
+}
+
+// On mobile the sidebar previously sat above the editor with a
+// `max-h-64` cap and `overflow-auto`, which cropped the records list
+// to a few entries and left the bulk of the screen for the editor
+// pane. Replace with a collapsed-by-default header bar that
+// expands inline when the user taps it. On md+ the header bar is
+// hidden and the sidebar renders as a fixed-width column.
+function CollapsibleAside({
+  dataWalk,
+  mobileLabel,
+  children,
+}: {
+  dataWalk: string;
+  mobileLabel: string;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <aside
+      data-walk={dataWalk}
+      className="md:w-64 md:border-r md:border-stone-200 bg-stone-50 md:px-3 md:py-4 md:flex md:flex-col md:gap-4 text-sm border-b md:border-b-0 border-stone-200 md:shrink-0"
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="md:hidden w-full flex items-center justify-between px-3 py-2 text-stone-700 font-medium"
+        aria-expanded={open}
+      >
+        <span>{mobileLabel}</span>
+        <span className="text-stone-400 text-xs">{open ? "▴" : "▾"}</span>
+      </button>
+      <div
+        className={`${
+          open ? "block" : "hidden"
+        } md:block px-3 pb-3 md:px-0 md:pb-0 flex-col gap-4 max-h-[60vh] md:max-h-none overflow-auto md:overflow-visible flex`}
+      >
+        {children}
+      </div>
     </aside>
   );
 }
@@ -266,12 +304,9 @@ function KindSidebar({ kind }: { kind: DraftKind }) {
   }
 
   return (
-    <aside
-      data-walk="sidebar"
-      className="md:w-64 md:border-r md:border-stone-200 bg-stone-50 px-3 py-3 md:py-4 flex flex-col gap-4 text-sm border-b md:border-b-0 border-stone-200 md:max-h-none max-h-64 overflow-auto md:overflow-visible md:shrink-0"
-    >
+    <CollapsibleAside dataWalk="sidebar" mobileLabel={KIND_LABEL[kind]}>
       <section className="flex flex-col gap-2">
-        <h2 className="font-semibold tracking-tight text-stone-700">
+        <h2 className="font-semibold tracking-tight text-stone-700 hidden md:block">
           {KIND_LABEL[kind]}
         </h2>
         {drafts.length === 0 && remoteOnly.length === 0 ? (
@@ -337,7 +372,7 @@ function KindSidebar({ kind }: { kind: DraftKind }) {
           </ul>
         )}
       </section>
-    </aside>
+    </CollapsibleAside>
   );
 }
 

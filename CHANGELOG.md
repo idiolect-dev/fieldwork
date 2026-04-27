@@ -9,6 +9,12 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-04-27
+
+### Changed
+
+- Lexicon Browser Fields view: inlined ref expansions now render as siblings in the parent table instead of nested inner tables, so the type, format, and description columns line up at every depth. Indentation is driven by per-row left padding on the name cell.
+
 ## [0.1.5] - 2026-04-27
 
 ### Fixed

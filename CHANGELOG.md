@@ -9,6 +9,12 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-04-27
+
+### Fixed
+
+- Import button used `py-1`, New and Export used `py-1.5`, leaving Import visibly shorter than its neighbours in every tool's toolbar. Bump Import to match.
+
 ## [0.1.8] - 2026-04-27
 
 ### Fixed

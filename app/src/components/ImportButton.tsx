@@ -88,7 +88,7 @@ export function ImportButton({ kind, fixtures }: Props) {
     <div className="relative inline-block">
       <button
         type="button"
-        className="px-3 py-1 text-sm rounded border border-stone-300 bg-white hover:bg-stone-50"
+        className="px-3 py-1.5 text-sm rounded border border-stone-300 bg-white hover:bg-stone-50"
         onClick={() => setOpen((v) => !v)}
       >
         Import

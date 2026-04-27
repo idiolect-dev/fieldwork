@@ -199,7 +199,7 @@ const FLOWS: Flow[] = [
       },
       {
         title: "Lens path",
-        body: "Order matters. Subscribers invoke lenses left-to-right. Each row autocompletes against your published lenses. At least one lens is required (the lexicon enforces it on publish).",
+        body: "Order matters. Subscribers invoke lenses left-to-right. Each row autocompletes against your published lenses, and the … button reveals optional cid (content-address pin) and direction (unidirectional or bidirectional) fields. At least one lens is required (the lexicon enforces it on publish).",
         tool: "recommendation",
         target: "[data-walk='recommendation-lenspath']",
       },

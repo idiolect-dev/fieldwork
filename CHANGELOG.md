@@ -9,6 +9,12 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.12] - 2026-04-27
+
+### Added
+
+- Recommendation lens-path rows now expose the optional `cid` and `direction` fields on `dev.idiolect.defs#lensRef` via a per-row "…" expander. Direction is a typed select (unidirectional / bidirectional). Empty values stay absent from the serialised body so unset rows look the same as before. Recommendation walkthrough updated to mention the new fields.
+
 ## [0.1.11] - 2026-04-27
 
 ### Fixed

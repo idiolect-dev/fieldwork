@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useWorkspaceStore, draftsByKind } from "../workspace/store";
 import { mintDraftId } from "../workspace/ids";
@@ -104,7 +104,7 @@ function RecommendationForm({
     };
     onChange({ ...draft, body: { ...draft.body, body: nextBody } });
   }
-  const lensPath = (body.lensPath as Array<{ uri?: string }>) ?? [];
+  const lensPath = (body.lensPath as LensRef[] | undefined) ?? [];
 
   return (
     <form className="grid grid-cols-1 gap-4 max-w-2xl">
@@ -198,90 +198,163 @@ function Field({
   );
 }
 
+// `dev.idiolect.defs#lensRef` — `uri` is the at-uri, `cid` an
+// optional content-address pin, `direction` an optional invertibility
+// hint. All three are optional in the lexicon (lensRef.required is
+// empty), but in practice a lens path entry without a `uri` is
+// unidentifiable, so the form treats `uri` as the gating field for
+// list membership.
+type LensDirection = "unidirectional" | "bidirectional";
+interface LensRef {
+  uri?: string;
+  cid?: string;
+  direction?: LensDirection;
+}
+
+function normaliseLensRef(l: LensRef): LensRef {
+  const out: LensRef = {};
+  if (l.uri) out.uri = l.uri;
+  if (l.cid) out.cid = l.cid;
+  if (l.direction) out.direction = l.direction;
+  return out;
+}
+
 function LensPathList({
   lensPath,
   onChange,
 }: {
-  lensPath: Array<{ uri?: string }>;
-  onChange: (next: Array<{ uri: string }>) => void;
+  lensPath: LensRef[];
+  onChange: (next: LensRef[]) => void;
 }) {
-  function setAt(i: number, uri: string) {
-    const next = lensPath.map((l, j) =>
-      i === j ? { uri } : { uri: l.uri ?? "" },
-    );
-    onChange(next.filter((l) => l.uri.length > 0) as Array<{ uri: string }>);
+  const [expanded, setExpanded] = useState<number | null>(null);
+  function commit(next: LensRef[]) {
+    onChange(next.map(normaliseLensRef).filter((l) => l.uri && l.uri.length > 0));
+  }
+  function setField(i: number, patch: Partial<LensRef>) {
+    const next = lensPath.map((l, j) => (i === j ? { ...l, ...patch } : l));
+    // For non-uri patches we don't want to drop empty-uri rows mid-edit.
+    if ("uri" in patch) {
+      commit(next);
+    } else {
+      onChange(next.map(normaliseLensRef));
+    }
   }
   function add() {
-    onChange([
-      ...lensPath.map((l) => ({ uri: l.uri ?? "" })),
-      { uri: "" },
-    ] as Array<{ uri: string }>);
+    onChange([...lensPath.map(normaliseLensRef), { uri: "" }]);
   }
   function remove(i: number) {
-    onChange(
-      lensPath
-        .filter((_, j) => j !== i)
-        .map((l) => ({ uri: l.uri ?? "" })) as Array<{ uri: string }>,
-    );
+    onChange(lensPath.filter((_, j) => j !== i).map(normaliseLensRef));
+    if (expanded === i) setExpanded(null);
   }
   function move(i: number, dir: -1 | 1) {
     const j = i + dir;
     if (j < 0 || j >= lensPath.length) return;
     const next = lensPath.slice();
     [next[i], next[j]] = [next[j], next[i]];
-    onChange(next.map((l) => ({ uri: l.uri ?? "" })) as Array<{ uri: string }>);
+    onChange(next.map(normaliseLensRef));
   }
 
-  const rows = lensPath.length === 0 ? [{ uri: "" }] : lensPath;
+  const rows = lensPath.length === 0 ? [{ uri: "" } as LensRef] : lensPath;
   const lensPlaceholder = useAtUriPlaceholder(
     "at://did:plc:.../dev.panproto.schema.lens/<rkey>",
   );
 
   return (
     <div className="flex flex-col gap-2">
-      {rows.map((l, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <span className="text-[10px] text-stone-400 font-mono w-6 text-right">
-            {i + 1}.
-          </span>
-          <div className="flex-1">
-            <AtUriAutocomplete
-              value={l.uri ?? ""}
-              onChange={(v) => setAt(i, v)}
-              expectedCollection="dev.panproto.schema.lens"
-              placeholder={lensPlaceholder}
-            />
+      {rows.map((l, i) => {
+        const isExpanded = expanded === i;
+        const hasMeta = !!(l.cid || l.direction);
+        return (
+          <div key={i} className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-stone-400 font-mono w-6 text-right">
+                {i + 1}.
+              </span>
+              <div className="flex-1">
+                <AtUriAutocomplete
+                  value={l.uri ?? ""}
+                  onChange={(v) => setField(i, { uri: v })}
+                  expectedCollection="dev.panproto.schema.lens"
+                  placeholder={lensPlaceholder}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setExpanded(isExpanded ? null : i)}
+                className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                  hasMeta
+                    ? "border-stone-400 text-stone-700"
+                    : "border-stone-200 text-stone-500"
+                } hover:bg-stone-50`}
+                title="cid + direction (optional)"
+              >
+                {isExpanded ? "−" : "…"}
+              </button>
+              <div className="flex flex-col text-stone-400 text-[10px] leading-tight">
+                <button
+                  type="button"
+                  onClick={() => move(i, -1)}
+                  disabled={i === 0}
+                  className="hover:text-stone-700 disabled:opacity-30"
+                  title="Move up"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(i, 1)}
+                  disabled={i === rows.length - 1}
+                  className="hover:text-stone-700 disabled:opacity-30"
+                  title="Move down"
+                >
+                  ↓
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                className="text-stone-500 text-xs px-1"
+                title="Remove lens"
+              >
+                ×
+              </button>
+            </div>
+            {isExpanded && (
+              <div className="ml-6 pl-3 border-l border-stone-200 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                <label className="flex flex-col gap-0.5 text-xs text-stone-600">
+                  <span>cid (optional)</span>
+                  <input
+                    type="text"
+                    value={l.cid ?? ""}
+                    onChange={(e) =>
+                      setField(i, { cid: e.target.value || undefined })
+                    }
+                    placeholder="bafy..."
+                    className="px-2 py-1 border border-stone-300 rounded font-mono text-xs"
+                  />
+                </label>
+                <label className="flex flex-col gap-0.5 text-xs text-stone-600">
+                  <span>direction (optional)</span>
+                  <select
+                    value={l.direction ?? ""}
+                    onChange={(e) =>
+                      setField(i, {
+                        direction:
+                          (e.target.value as LensDirection | "") || undefined,
+                      })
+                    }
+                    className="px-2 py-1 border border-stone-300 rounded text-xs bg-white"
+                  >
+                    <option value="">—</option>
+                    <option value="unidirectional">unidirectional</option>
+                    <option value="bidirectional">bidirectional</option>
+                  </select>
+                </label>
+              </div>
+            )}
           </div>
-          <div className="flex flex-col text-stone-400 text-[10px] leading-tight">
-            <button
-              type="button"
-              onClick={() => move(i, -1)}
-              disabled={i === 0}
-              className="hover:text-stone-700 disabled:opacity-30"
-              title="Move up"
-            >
-              ↑
-            </button>
-            <button
-              type="button"
-              onClick={() => move(i, 1)}
-              disabled={i === rows.length - 1}
-              className="hover:text-stone-700 disabled:opacity-30"
-              title="Move down"
-            >
-              ↓
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={() => remove(i)}
-            className="text-stone-500 text-xs px-1"
-            title="Remove lens"
-          >
-            ×
-          </button>
-        </div>
-      ))}
+        );
+      })}
       <button
         type="button"
         onClick={add}

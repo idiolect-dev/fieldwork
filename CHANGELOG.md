@@ -9,6 +9,13 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.1.17] - 2026-04-28
+
+### Fixed
+
+- WASM-unsupported browsers got a misleading "Run ./scripts/build-wasm.sh from the project root" hint, which is dev-only guidance no end user can act on. The boot path now pre-flights `typeof WebAssembly === "object"` and shows a dedicated "your browser doesn't support WebAssembly" message instead of letting the WASM load throw a generic "WebAssembly is not defined". The bundle-load-failed branch keeps the dev hint only when the page is served from `localhost` / `127.0.0.1`; on production deploys it suggests a reload instead.
+- The walkthrough hub and confirm-modal host previously mounted regardless of WASM state, so a no-WASM browser saw the tutorial dialogs over an unusable app. Both now mount only after the WASM bundle is up, so the error is the first thing the user sees on a browser that can't run the app.
+
 ## [0.1.16] - 2026-04-27
 
 ### Changed

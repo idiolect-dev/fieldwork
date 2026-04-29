@@ -55,6 +55,9 @@ export const REPO_SCOPES = {
   VOCAB: "repo:dev.idiolect.vocab",
   COMMUNITY: "repo:dev.idiolect.community",
   RECOMMENDATION: "repo:dev.idiolect.recommendation",
+  DELIBERATION: "repo:dev.idiolect.deliberation",
+  DELIBERATION_STATEMENT: "repo:dev.idiolect.deliberationStatement",
+  DELIBERATION_OUTCOME: "repo:dev.idiolect.deliberationOutcome",
   // Lens records are panproto-shaped, not idiolect-shaped, but
   // fieldwork lets curators upload protolab-authored lenses to
   // their own PDS so dialect / recommendation drafts can reference
@@ -68,6 +71,7 @@ export const REPO_SCOPES = {
   RETROSPECTION: "repo:dev.idiolect.retrospection",
   VERIFICATION: "repo:dev.idiolect.verification",
   BOUNTY: "repo:dev.idiolect.bounty",
+  DELIBERATION_VOTE: "repo:dev.idiolect.deliberationVote",
 } as const;
 
 const CURATOR_REPO_SCOPES = [
@@ -75,6 +79,9 @@ const CURATOR_REPO_SCOPES = [
   REPO_SCOPES.VOCAB,
   REPO_SCOPES.COMMUNITY,
   REPO_SCOPES.RECOMMENDATION,
+  REPO_SCOPES.DELIBERATION,
+  REPO_SCOPES.DELIBERATION_STATEMENT,
+  REPO_SCOPES.DELIBERATION_OUTCOME,
   REPO_SCOPES.LENS,
 ];
 
@@ -87,6 +94,7 @@ const FULL_REPO_SCOPES = [
   REPO_SCOPES.RETROSPECTION,
   REPO_SCOPES.VERIFICATION,
   REPO_SCOPES.BOUNTY,
+  REPO_SCOPES.DELIBERATION_VOTE,
 ];
 
 /** Permission-set hierarchy, least-to-most permissive. */

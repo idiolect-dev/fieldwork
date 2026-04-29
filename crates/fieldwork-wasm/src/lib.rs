@@ -27,9 +27,10 @@ pub fn version() -> String {
 /// Decode a JSON record body into a typed [`Draft`] envelope.
 ///
 /// `kind` is the kebab-case kind tag (`dialect`, `vocab`, `community`,
-/// `recommendation`); `body_json` is the raw record body the browser
-/// loaded from a file / at-uri / fixture; `id` and `label` are
-/// browser-assigned bookkeeping.
+/// `recommendation`, `deliberation`, `deliberation-statement`,
+/// `deliberation-outcome`); `body_json` is the raw record body the
+/// browser loaded from a file / at-uri / fixture; `id` and `label`
+/// are browser-assigned bookkeeping.
 #[wasm_bindgen(js_name = importRecord)]
 pub fn import_record_js(
     kind: &str,
@@ -113,6 +114,9 @@ fn parse_kind(kebab: &str) -> Result<DraftKind, JsError> {
         "vocab" => DraftKind::Vocab,
         "community" => DraftKind::Community,
         "recommendation" => DraftKind::Recommendation,
+        "deliberation" => DraftKind::Deliberation,
+        "deliberation-statement" => DraftKind::DeliberationStatement,
+        "deliberation-outcome" => DraftKind::DeliberationOutcome,
         other => return Err(JsError::new(&format!("unknown draft kind: {other:?}"))),
     })
 }

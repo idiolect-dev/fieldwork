@@ -56,7 +56,7 @@ const FLOWS: Flow[] = [
       },
       {
         title: "Tool nav",
-        body: "Switch workshops from this row. Each one wraps a different record kind in the dev.idiolect.* family (plus the Lens Manager, which uploads panproto lenses).",
+        body: "Switch workshops from this row. Seven tools: Dialect Composer, Vocabulary Editor, Community Config, Recommendation Builder, Deliberation Composer (new in idiolect v0.7), Lens Manager (uploads panproto lenses), and Lexicon Browser (read-only).",
         target: "[data-walk='nav']",
       },
       {
@@ -66,7 +66,7 @@ const FLOWS: Flow[] = [
       },
       {
         title: "Importing what's already published",
-        body: "If you're signed in, records you've published before show up in the same list with the emerald dot — even ones you didn't draft locally. Clicking imports a fresh draft pre-linked to the PDS version so further edits flip the dot to amber.",
+        body: "If you're signed in, records you've published before show up in the same list with the emerald dot, even ones you didn't draft locally. Clicking imports a fresh draft pre-linked to the PDS version so further edits flip the dot to amber.",
         target: "[data-walk='sidebar']",
       },
       {
@@ -151,25 +151,19 @@ const FLOWS: Flow[] = [
   {
     key: "vocab",
     headline: "Vocabulary Editor",
-    blurb: "Define an action or purpose hierarchy with a chosen world discipline.",
+    blurb: "Author a typed multi-relation knowledge graph of actions, purposes, and other concepts.",
     tool: "vocab",
-    template: { kind: "vocab", name: "vocab/action-broad-tree" },
+    template: { kind: "vocab", name: "vocab/graph-multi-relation" },
     steps: [
       {
         title: "What you're building",
-        body: "A dev.idiolect.vocab record. The hierarchy gives Encounters a shared semantics for 'this action is a kind of that action'. We've cloned an 8-entry ML-pipeline example for the tour. It'll be removed when you finish.",
+        body: "A dev.idiolect.vocab record. A typed multi-relation knowledge graph: typed nodes (concept, action, purpose, relation, collection, ...) plus typed edges carrying a relationSlug (subsumed_by, broader_than, equivalent_to, narrower_than, polar_opposite_of, ...). Encounters cite a vocab to ground their action and purpose strings. We've cloned a multi-relation purposes example for the tour. It'll be removed when you finish.",
       },
       {
-        title: "World discipline",
-        body: "Picks the closure semantics: open (undeclared ids are incomparable), hierarchy-closed (only declared edges hold), or closed-with-default (the top entry rolls up everything undeclared).",
+        title: "World",
+        body: "Closure semantics for subsumption. open (undeclared ids are incomparable), hierarchy-closed (only declared edges hold), or closed-with-default (a designated top node rolls up everything undeclared). Per-relation overrides live on each relation-kind node.",
         tool: "vocab",
         target: "[data-walk='vocab-world']",
-      },
-      {
-        title: "Top action id",
-        body: "The root of the lattice. Every other entry must trace a parent chain back to this id. The datalist autocompletes from the entries you've added below.",
-        tool: "vocab",
-        target: "[data-walk='vocab-top']",
       },
       {
         title: "Supersedes",
@@ -178,16 +172,22 @@ const FLOWS: Flow[] = [
         target: "[data-walk='vocab-supersedes']",
       },
       {
-        title: "Entries and parents",
-        body: "Add entries, link parents via the chip picker. The validator catches cycles, undeclared parents, orphans, and self-parent edges in real time.",
+        title: "Nodes",
+        body: "Each node is a concept, action, purpose, relation kind, or any custom kind. Per-node fields cover SKOS Core annotations (label, alternateLabels, hiddenLabels, scopeNote, example, historyNote, editorialNote, changeNote, notation), externalIds against systems like Wikidata or ROR, status, deprecatedBy, and Collection grouping via member_of.",
         tool: "vocab",
-        target: "[data-walk='vocab-entries']",
+        target: "[data-walk='vocab-graph']",
       },
       {
-        title: "Hierarchy preview",
-        body: "Renders the tree as you build it. Multi-parent entries surface their additional parents inline.",
+        title: "Edges and OWL Lite",
+        body: "Edges carry source, target, relationSlug, plus optional weight, confidence, temporal validity, and source attestation. Relation-kind nodes (kind=relation) carry OWL Lite property characteristics (symmetric, asymmetric, transitive, reflexive, irreflexive, functional, inverseFunctional, inverseOf) so reasoners can close the relation algebraically.",
         tool: "vocab",
-        target: "[data-walk='vocab-preview']",
+        target: "[data-walk='vocab-graph']",
+      },
+      {
+        title: "Templates",
+        body: "The Templates list in the sidebar carries five examples. Single-relation subsumption, multi-relation (subsumed_by, broader_than, equivalent_to), OWL Lite (transitive, inverseOf), SKOS Core annotations, and the deliberation vote-stances vocab (symmetric polar_opposite_of). Clone any of them to see a fully-expressive vocab without writing JSON.",
+        tool: "vocab",
+        target: "[data-walk='sidebar']",
       },
       {
         title: "Publish + lifecycle",
@@ -239,6 +239,18 @@ const FLOWS: Flow[] = [
         target: "[data-walk='community-endorsed']",
       },
       {
+        title: "Role assignments (new in idiolect v0.7)",
+        body: "Sparse [{did, role}] list. Only members whose role differs from the implicit default need an entry. Roles are open-enum slugs (member, moderator, delegate, author by default, or any community-extended slug). The slug resolves through the optional `memberRoleVocab` at-uri so different communities can pin different role taxonomies.",
+        tool: "community",
+        target: "[data-walk='community-role-assignments']",
+      },
+      {
+        title: "Record hosting (new in idiolect v0.7)",
+        body: "Documents where this community's records live. `member-hosted` is the ATProto default (records on individual member PDSes). `community-hosted` mirrors Acorn-style AppView communities where records live on a shared service. `hybrid` is both. Pair with the AppView endpoint URL when records are community-hosted so subscribers know where to fetch.",
+        tool: "community",
+        target: "[data-walk='community-record-hosting']",
+      },
+      {
         title: "Conventions (structured)",
         body: "The decidable subset: review cadence, verification requirements, deprecation policy. Each entry is a typed predicate the community has agreed to. Subscribers can check candidate lenses against these mechanically.",
         tool: "community",
@@ -283,7 +295,7 @@ const FLOWS: Flow[] = [
       },
       {
         title: "Conditions",
-        body: "When this recommendation applies. Postfix combinator tree over typed atomic predicates (sourceIs, targetIs, actionSubsumedBy, ...). The tree editor builds them without typing JSON. Subscribers evaluate this against their record before invoking the lens path.",
+        body: "When this recommendation applies. Postfix combinator tree over typed atomic predicates (sourceIs, targetIs, actionSubsumedBy, ...). The tree editor builds them without typing JSON. Every at-uri input (schema refs in sourceIs and targetIs, action and purpose vocabularies) autocompletes against the right collection so handles work as shorthand. Subscribers evaluate this against their record before invoking the lens path.",
         tool: "recommendation",
         target: "[data-walk='recommendation-conditions']",
       },
@@ -308,6 +320,66 @@ const FLOWS: Flow[] = [
     ],
   },
   {
+    key: "deliberation",
+    headline: "Deliberation Composer",
+    blurb: "Author community-scoped questions, proposals, and observer-published outcomes (new in idiolect v0.7).",
+    tool: "deliberation",
+    steps: [
+      {
+        title: "What you're building",
+        body: "A dev.idiolect.deliberation record (and optionally its statement and outcome siblings). Deliberations are first-class in idiolect v0.7. A community-scoped question or proposal under collective consideration. Statements attach to it via strong-ref. Votes attach to statements (real-time action, not authored here). An observer-published outcome record summarises the tally once it closes. Maps cleanly to Acorn-style assembly conversations on the bridge.",
+      },
+      {
+        title: "Owning community",
+        body: "Pin the community whose membership is deliberating. Resolves member permissions and dialect preferences for clients reading the deliberation. Autocomplete is scoped to dev.idiolect.community.",
+        tool: "deliberation",
+        target: "[data-walk='deliberation-owning-community']",
+      },
+      {
+        title: "Topic + description",
+        body: "The question or proposal under consideration. Topic is short (<=1000 graphemes) and mirrors the draft's user-visible label. Description carries long-form motivation, constraints, and prior history.",
+        tool: "deliberation",
+        target: "[data-walk='deliberation-topic']",
+      },
+      {
+        title: "Classification + status (open enums)",
+        body: "Classification names the deliberation's argumentative shape (question, proposal, grievance, retrospective by default, or any community-extended slug). Status is the lifecycle marker (open, closed, tabled, adopted, rejected). Both are open enums. Pick a canonical default from the dropdown or `custom slug…` to type a community-extended one. The vocabularies in the next step resolve unfamiliar slugs.",
+        tool: "deliberation",
+        target: "[data-walk='deliberation-classification-status']",
+      },
+      {
+        title: "Vocabularies (open-enum extensions)",
+        body: "Optional at-uris pointing at vocab records that constitute the open extension for classification and status. Subscribers resolve unfamiliar slugs against these. Defaults to the canonical idiolect-published vocabs when omitted.",
+        tool: "deliberation",
+        target: "[data-walk='deliberation-vocabs']",
+      },
+      {
+        title: "Lifecycle (auth + closed-at)",
+        body: "Auth-required toggles whether members must be authenticated to participate (default: true). Closed-at marks the cutoff after which votes and statements no longer count toward the tally. Observers fold votes into the outcome record once closed.",
+        tool: "deliberation",
+        target: "[data-walk='deliberation-lifecycle']",
+      },
+      {
+        title: "Outcome link (set on close)",
+        body: "Once the deliberation closes and an observer publishes the tally, set this to point at the published dev.idiolect.deliberationOutcome record. Lets clients fetch the resolution without re-folding every vote. Autocomplete is scoped to dev.idiolect.deliberationOutcome.",
+        tool: "deliberation",
+        target: "[data-walk='deliberation-outcome-link']",
+      },
+      {
+        title: "Statements + outcomes",
+        body: "Sibling tools live alongside this one for `dev.idiolect.deliberationStatement` (member-authored claim, proposal, dissent, or clarification, attaching by strong-ref) and `dev.idiolect.deliberationOutcome` (observer-published tally with per-stance counts and optional adopted-statements list). Vote records (`deliberationVote`) are reserved at the FULL OAuth scope tier. They're real-time action, not authored governance, so they don't have a fieldwork composer.",
+        tool: "deliberation",
+        target: "[data-walk='sidebar']",
+      },
+      {
+        title: "Publish + lifecycle",
+        body: "Export → Publish ships the deliberation to your PDS. Edits flip the sidebar dot to amber and unlock Revert + Delete from PDS in the editor toolbar.",
+        tool: "deliberation",
+        target: "[data-walk='editor-toolbar']",
+      },
+    ],
+  },
+  {
     key: "lexicon",
     headline: "Lexicon Browser",
     blurb: "Read-only inspector for every dev.idiolect.* lexicon (plus your imports).",
@@ -315,17 +387,17 @@ const FLOWS: Flow[] = [
     steps: [
       {
         title: "What this is",
-        body: "A read-only browser over every bundled dev.idiolect.* and dev.panproto.* lexicon, plus anything you import. Each document gets validated through panproto on selection so you see immediately whether it parses as a panproto schema.",
+        body: "A read-only browser over every bundled dev.idiolect.* and dev.panproto.* lexicon, plus anything you import. Each document gets validated through panproto on selection so you see immediately whether it parses as a panproto schema. The walkthrough opens dev.idiolect.recommendation as a demo: it exercises the broadest slice of lexicon features (a record main, a tagged union over eight object variants for the condition tree, refs, arrays of refs, knownValues open enums, datetime and at-uri formats, length-constrained strings, optional and required fields), so each tab tour below lands on real content.",
       },
       {
         title: "Lexicon list",
-        body: "Filter the loaded set, paste an NSID into the lexicon.garden search to resolve a remote one, or drop a JSON file from your filesystem.",
+        body: "Filter the loaded set, paste an NSID into the lexicon.garden search to resolve a remote one, or drop a JSON file from your filesystem. The list is open on dev.idiolect.recommendation. Click any other entry to jump.",
         tool: "lexicon",
         target: "[data-walk='lexicon-list']",
       },
       {
         title: "Six tabs",
-        body: "Each lexicon gets six views. The next steps walk through each one.",
+        body: "Each lexicon gets six views over the same document. The next steps walk through each one against the recommendation lexicon.",
         tool: "lexicon",
         target: "[data-walk='lexicon-tabs']",
       },
@@ -385,7 +457,7 @@ const FLOWS: Flow[] = [
       },
       {
         title: "Upload from protolab",
-        body: "Paste or drop the lens body JSON. We sanity-check the parse, stamp $type, normalise at-uris, then call createRecord against your PDS. The rkey field is optional — leave blank and we let the PDS auto-generate one, or set it explicitly when you want a stable URL (e.g. 'main' for the canonical version).",
+        body: "Paste or drop the lens body JSON. We sanity-check the parse, stamp $type, normalise at-uris, then call createRecord against your PDS. The rkey field is optional. Leave blank and we let the PDS auto-generate one, or set it explicitly when you want a stable URL (e.g. 'main' for the canonical version).",
         tool: "lens",
         target: "[data-walk='lens-upload']",
       },

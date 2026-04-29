@@ -1,7 +1,7 @@
 {
   "name": "fieldwork-app",
   "private": true,
-  "version": "0.1.17",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,7 +15,7 @@
   "dependencies": {
     "@atproto/api": "^0.13.0",
     "@atproto/oauth-client-browser": "^0.3.0",
-    "@idiolect-dev/schema": "^0.5.0",
+    "@idiolect-dev/schema": "^0.7.0",
     "@panproto/core": "^0.39.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

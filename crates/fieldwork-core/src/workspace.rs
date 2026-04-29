@@ -1,5 +1,5 @@
 //! In-memory workspace: the live collection of drafts the user is
-//! editing across all five v1 tools.
+//! editing across every fieldwork tool.
 //!
 //! The workspace is a `BTreeMap<draft_id, Draft>`. The browser owns
 //! a single instance and serializes it to localStorage between

@@ -8,6 +8,7 @@ import { LexiconBrowser } from "./tools/LexiconBrowser";
 import { CommunityConfig } from "./tools/CommunityConfig";
 import { RecommendationBuilder } from "./tools/RecommendationBuilder";
 import { LensManager } from "./tools/LensManager";
+import { DeliberationComposer } from "./tools/DeliberationComposer";
 import { AppWalkthrough } from "./components/AppWalkthrough";
 import { ConfirmHost } from "./components/ConfirmModal";
 import { Sidebar } from "./components/Sidebar";
@@ -20,6 +21,7 @@ const TOOL_LABEL: Record<ToolKey, string> = {
   vocab: "Vocabularies",
   lexicon: "Lexicons",
   community: "Communities",
+  deliberation: "Deliberations",
   recommendation: "Recommendations",
   lens: "Lenses",
 };
@@ -152,6 +154,8 @@ function ActiveTool({ tool }: { tool: ToolKey }) {
       return <RecommendationBuilder />;
     case "lens":
       return <LensManager />;
+    case "deliberation":
+      return <DeliberationComposer />;
   }
 }
 

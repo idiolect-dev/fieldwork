@@ -9,6 +9,26 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-29
+
+### Added
+
+- Deliberation Composer, a new top-level tool for `dev.idiolect.deliberation`, `deliberationStatement`, and `deliberationOutcome` records. Authors a community-scoped question or proposal with topic, description, classification (open enum: question, proposal, grievance, retrospective, with custom-slug fallback), status (open, closed, tabled, adopted, rejected, with custom-slug fallback), classification and status vocab pointers, auth-required toggle, optional closed-at, and outcome at-uri. Statement and outcome kinds are wired through the workspace store, sidebar, fixtures, import and export, guidance, and OAuth scope tier. Deliberation votes are intentionally out of scope for fieldwork (real-time action on a member's PDS, not authored governance) but the scope is reserved at the FULL tier.
+- VocabularyEditor rewritten around idiolect v0.7's typed multi-relation knowledge graph (`nodes` plus `edges`). Per-node fields cover kind, label, alternateLabels, hiddenLabels, scopeNote, example, historyNote, editorialNote, changeNote, notation, definition, status, externalIds (system enum plus match type), and SKOS Collection member_of. Per-edge fields cover relation slug, source, target, weight, confidence, valid-from, valid-to, source attestation, and full OWL Lite property characteristics (symmetric, asymmetric, transitive, reflexive, irreflexive, functional, inverseFunctional, inverseOf) plus per-relation world override. Five vocab fixtures cover single-relation subsumption, multi-relation, OWL Lite, SKOS Core, and the deliberation vote-stances vocab.
+- CommunityConfig gains the three new idiolect v0.7 community fields. `roleAssignments` (sparse `[{did, role}]` list using a typed role select with custom-slug fallback over member, moderator, delegate, author, and a `memberRoleVocab` at-uri pointer), `recordHosting` (member-hosted, community-hosted, hybrid), and `appviewEndpoint` for community-hosted record stores.
+- ConditionTreeEditor at-uri inputs (sourceIs and targetIs schema, action and purpose vocabularies) now use `AtUriAutocomplete` with the correct `expectedCollection` so handles work as shorthand for at-uris in recommendation conditions.
+
+### Changed
+
+- Bumped `@idiolect-dev/schema` to `^0.7.0` and the `idiolect` workspace tag to `v0.7.0`. Refreshed all bundled lexicon JSONs to the idiolect v0.7 shapes (vocab knowledge graph, open-enum convention across `adapter`, `community`, `recommendation`, `belief`, `observation`, `correction`, `encounter`, `bounty`, `retrospection`, `verification`).
+- OAuth client metadata declares the four new `dev.idiolect.deliberation*` repo scopes. The scopes test enforces parity.
+- Autocomplete coverage. Role-assignment DIDs in Community Config use `HandleSearch` (handle to DID resolution plus active-session suggestions, replacing the bare datalist of member DIDs). `inverseOf` on relation-kind vocab nodes uses the local-node datalist filtered to relation-kind ids so authors pick from declared relations rather than free-typing slugs.
+- Walkthroughs cover every new feature. A full Deliberation Composer flow (eight steps), vocab flow rewritten around the knowledge-graph shape (Nodes step, Edges and OWL Lite step, Templates step), community flow gains Role assignments and Record hosting steps, recommendation flow's Conditions step mentions at-uri autocomplete, intro tool-nav copy lists all seven tools. The Lexicon Browser walkthrough auto-selects `dev.idiolect.recommendation` (the most feature-rich bundled lexicon) so each tab tour lands on real content rather than the empty-state placeholder.
+
+### Removed
+
+- Legacy tree-shape vocab editor and fixtures (`actions`, `top`, `parents`, `class`, action-three-tier / action-broad-tree / action-hierarchy-closed / purpose-open / purpose-with-classes templates). idiolect v0.7's typed knowledge graph subsumes the tree-shape form, no `dev.idiolect.vocab` records exist on atproto, and there's no migration burden.
+
 ## [0.1.17] - 2026-04-28
 
 ### Fixed

@@ -75,6 +75,9 @@ pub fn build_export_envelope(draft: &Draft, did: &str) -> Result<ExportEnvelope,
         Draft::Vocab(d) => serde_json::to_string_pretty(&d.body)?,
         Draft::Community(d) => serde_json::to_string_pretty(&d.body)?,
         Draft::Recommendation(d) => serde_json::to_string_pretty(&d.body)?,
+        Draft::Deliberation(d) => serde_json::to_string_pretty(&d.body)?,
+        Draft::DeliberationStatement(d) => serde_json::to_string_pretty(&d.body)?,
+        Draft::DeliberationOutcome(d) => serde_json::to_string_pretty(&d.body)?,
     };
     let kind = draft.kind();
     let nsid = kind.nsid();

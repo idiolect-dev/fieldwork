@@ -15,6 +15,7 @@
 // imbalance at publish.
 
 import type { ChangeEvent } from "react";
+import { AtUriAutocomplete } from "../components/AtUriAutocomplete";
 
 type NodeType =
   | "sourceIs"
@@ -245,12 +246,10 @@ function NodeFields({
     case "sourceIs":
     case "targetIs":
       return (
-        <input
-          type="text"
+        <AtUriAutocomplete
           value={node.schema?.uri ?? ""}
-          onChange={(e) =>
-            onPatch({ schema: { uri: e.target.value } })
-          }
+          onChange={(v) => onPatch({ schema: { uri: v } })}
+          expectedCollection="dev.panproto.schema.schema"
           placeholder="schema at-uri"
           className="w-full px-2 py-0.5 border border-stone-200 rounded font-mono text-xs"
         />
@@ -265,17 +264,19 @@ function NodeFields({
             placeholder="action id (e.g. train_model)"
             className="flex-1 px-2 py-0.5 border border-stone-200 rounded font-mono text-xs"
           />
-          <input
-            type="text"
-            value={node.actionVocabulary?.uri ?? ""}
-            onChange={(e) =>
-              onPatch({
-                actionVocabulary: { uri: e.target.value || undefined },
-              })
-            }
-            placeholder="vocab at-uri (optional)"
-            className="flex-1 px-2 py-0.5 border border-stone-200 rounded font-mono text-xs"
-          />
+          <div className="flex-1">
+            <AtUriAutocomplete
+              value={node.actionVocabulary?.uri ?? ""}
+              onChange={(v) =>
+                onPatch({
+                  actionVocabulary: { uri: v || undefined },
+                })
+              }
+              expectedCollection="dev.idiolect.vocab"
+              placeholder="vocab at-uri (optional)"
+              className="w-full px-2 py-0.5 border border-stone-200 rounded font-mono text-xs"
+            />
+          </div>
         </div>
       );
     case "purposeSubsumedBy":
@@ -288,17 +289,19 @@ function NodeFields({
             placeholder="purpose id"
             className="flex-1 px-2 py-0.5 border border-stone-200 rounded font-mono text-xs"
           />
-          <input
-            type="text"
-            value={node.purposeVocabulary?.uri ?? ""}
-            onChange={(e) =>
-              onPatch({
-                purposeVocabulary: { uri: e.target.value || undefined },
-              })
-            }
-            placeholder="vocab at-uri (optional)"
-            className="flex-1 px-2 py-0.5 border border-stone-200 rounded font-mono text-xs"
-          />
+          <div className="flex-1">
+            <AtUriAutocomplete
+              value={node.purposeVocabulary?.uri ?? ""}
+              onChange={(v) =>
+                onPatch({
+                  purposeVocabulary: { uri: v || undefined },
+                })
+              }
+              expectedCollection="dev.idiolect.vocab"
+              placeholder="vocab at-uri (optional)"
+              className="w-full px-2 py-0.5 border border-stone-200 rounded font-mono text-xs"
+            />
+          </div>
         </div>
       );
     case "dataHas":

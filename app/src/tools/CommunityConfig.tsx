@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useWorkspaceStore, draftsByKind } from "../workspace/store";
 import { mintDraftId } from "../workspace/ids";
@@ -10,13 +10,13 @@ import { ExportButton } from "../components/ExportButton";
 import { GuidancePane } from "../components/GuidancePane";
 import { DiffPane } from "../components/DiffPane";
 import { communityFixtures } from "../fixtures/community";
-import { useState } from "react";
 import { useActiveDid } from "../sessions/placeholders";
 import { HandleSearch } from "../components/HandleSearch";
 import { useActorProfile } from "../sessions/actorProfile";
 import { DatetimeInput } from "../components/DatetimeInput";
 import { AtUriAutocomplete } from "../components/AtUriAutocomplete";
 import { useAtUriPlaceholder } from "../sessions/placeholders";
+import { Tooltip } from "../components/Tooltip";
 
 export function CommunityConfig() {
   const drafts = useWorkspaceStore(useShallow((s) => draftsByKind(s, "community")));
@@ -149,6 +149,78 @@ function CommunityForm({
           />
         </div>
       </Field>
+      <div data-walk="community-role-assignments">
+      <Field
+        label={
+          <>
+            Role assignments (optional){" "}
+            <Tooltip text="Sparse [{did, role}] list for members whose role differs from the implicit default. The role slug resolves through `memberRoleVocab` (canonical idiolect community-roles when omitted: member / moderator / delegate / author).">
+              <span className="text-stone-400 font-normal cursor-help">?</span>
+            </Tooltip>
+          </>
+        }
+      >
+        <RoleAssignmentList
+          assignments={
+            Array.isArray(body.roleAssignments)
+              ? (body.roleAssignments as RoleAssignment[])
+              : []
+          }
+          memberDids={members}
+          onChange={(next) =>
+            patch("roleAssignments", next.length === 0 ? undefined : next)
+          }
+        />
+      </Field>
+      <Field label="Member role vocabulary at-uri (optional)">
+        <AtUriAutocomplete
+          value={
+            ((body.memberRoleVocab as { uri?: string } | undefined)?.uri) ?? ""
+          }
+          onChange={(v) =>
+            patch("memberRoleVocab", v.trim() ? { uri: v } : undefined)
+          }
+          expectedCollection="dev.idiolect.vocab"
+          placeholder="at://...idiolect/dev.idiolect.vocab/community-roles-v1"
+        />
+      </Field>
+      </div>
+      <div data-walk="community-record-hosting">
+      <Field
+        label={
+          <>
+            Record hosting{" "}
+            <Tooltip text="Where this community's records live. `member-hosted` (default ATProto): records on individual member PDSes. `community-hosted` (Acorn-style): records on a community AppView. `hybrid`: both.">
+              <span className="text-stone-400 font-normal cursor-help">?</span>
+            </Tooltip>
+          </>
+        }
+      >
+        <select
+          value={(body.recordHosting as string | undefined) ?? ""}
+          onChange={(e) =>
+            patch("recordHosting", e.target.value || undefined)
+          }
+          className="px-2 py-1.5 border border-stone-300 rounded w-fit"
+        >
+          <option value="">(unset; defaults to member-hosted)</option>
+          <option value="member-hosted">member-hosted</option>
+          <option value="community-hosted">community-hosted</option>
+          <option value="hybrid">hybrid</option>
+        </select>
+      </Field>
+      <Field label="AppView endpoint URL (optional)">
+        <input
+          type="url"
+          value={(body.appviewEndpoint as string | undefined) ?? ""}
+          onChange={(e) =>
+            patch("appviewEndpoint", e.target.value || undefined)
+          }
+          placeholder="https://example.community"
+          className="w-full px-2 py-1.5 border border-stone-300 rounded font-mono text-sm"
+        />
+      </Field>
+      </div>
       <Field label="Core schemas">
         <div data-walk="community-core-schemas">
           <RefList
@@ -220,7 +292,7 @@ function Field({
   label,
   children,
 }: {
-  label: string;
+  label: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -416,6 +488,134 @@ function MemberList({
         >
           + member
         </button>
+      )}
+    </div>
+  );
+}
+
+// `community.roleAssignments` is `array<#roleAssignment>`. Each
+// item carries a member did plus a role slug resolved through
+// `memberRoleVocab` (canonical idiolect community-roles when unset).
+interface RoleAssignment {
+  did: string;
+  role: string;
+}
+
+const KNOWN_ROLES = ["member", "moderator", "delegate", "author"] as const;
+
+function RoleAssignmentList({
+  assignments,
+  memberDids,
+  onChange,
+}: {
+  assignments: RoleAssignment[];
+  memberDids: string[];
+  onChange: (next: RoleAssignment[]) => void;
+}) {
+  function patchAt(i: number, partial: Partial<RoleAssignment>) {
+    onChange(
+      assignments.map((a, j) => (j === i ? { ...a, ...partial } : a)),
+    );
+  }
+  function removeAt(i: number) {
+    onChange(assignments.filter((_, j) => j !== i));
+  }
+  function add() {
+    onChange([
+      ...assignments,
+      { did: memberDids[0] ?? "", role: "moderator" },
+    ]);
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      {assignments.length === 0 ? (
+        <p className="text-xs text-stone-500">
+          No role assignments. The default role from the role
+          vocabulary's top node applies to every member with no entry.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {assignments.map((a, i) => (
+            <li
+              key={i}
+              className="flex flex-wrap items-center gap-2 border border-stone-200 rounded px-2 py-1 bg-white"
+            >
+              <div className="flex-1 min-w-[12rem]">
+                <HandleSearch
+                  value={a.did}
+                  onChange={(did) => patchAt(i, { did })}
+                  placeholder="handle or did:plc:..."
+                  className="w-full px-2 py-1 border border-stone-200 rounded font-mono text-xs"
+                />
+              </div>
+              <RoleSlugSelect
+                value={a.role}
+                onChange={(v) => patchAt(i, { role: v })}
+              />
+              <button
+                type="button"
+                onClick={() => removeAt(i)}
+                className="text-stone-500 hover:text-red-700 px-1 text-xs"
+                title="Remove"
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button
+        type="button"
+        onClick={add}
+        className="self-start text-xs text-stone-700 underline"
+      >
+        + role assignment
+      </button>
+    </div>
+  );
+}
+
+function RoleSlugSelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const inKnown = (KNOWN_ROLES as readonly string[]).includes(value);
+  const [customMode, setCustomMode] = useState(value !== "" && !inKnown);
+  const isCustom = customMode || (value !== "" && !inKnown);
+  return (
+    <div className="flex items-center gap-1">
+      <select
+        value={isCustom ? "__custom__" : value}
+        onChange={(e) => {
+          if (e.target.value === "__custom__") {
+            setCustomMode(true);
+          } else {
+            setCustomMode(false);
+            onChange(e.target.value);
+          }
+        }}
+        className="px-2 py-1 border border-stone-200 rounded text-xs"
+      >
+        {KNOWN_ROLES.map((r) => (
+          <option key={r} value={r}>
+            {r}
+          </option>
+        ))}
+        <option value="__custom__">custom…</option>
+      </select>
+      {isCustom && (
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="community-extended-role"
+          className="px-2 py-1 border border-stone-200 rounded font-mono text-xs"
+          autoFocus
+        />
       )}
     </div>
   );

@@ -10,7 +10,7 @@
 //
 // Source of truth lives upstream in `idiolect-dev/idiolect`'s
 // `lexicons/` tree. Copies in `json/` are vendored at the
-// `@idiolect-dev/schema@0.4.x` cut and re-vendored alongside each
+// `@idiolect-dev/schema@0.7.x` cut and re-vendored alongside each
 // release of fieldwork.
 
 interface BundledLexicon {

@@ -1,101 +1,162 @@
 export const vocabFixtures = [
   {
-    name: "vocab/action-three-tier",
-    label: "action, three-tier closed-with-default",
+    name: "vocab/graph-subsumption",
+    label: "single-relation subsumption (subsumed_by edges)",
     body: {
       name: "training-actions-v1",
       description:
-        "Top action subsumes every concrete training action.",
+        "Three-tier subsumption hierarchy expressed as typed nodes plus subsumed_by edges. The root node has no outbound subsumed_by edge.",
       world: "closed-with-default",
-      top: "any_action",
-      actions: [
-        { id: "any_action", parents: [] },
-        { id: "train_model", parents: ["any_action"] },
-        { id: "fine_tune", parents: ["train_model"] },
+      nodes: [
+        { id: "any_action", kind: "action", label: "any action" },
+        { id: "train_model", kind: "action", label: "train model" },
+        { id: "fine_tune", kind: "action", label: "fine tune" },
+      ],
+      edges: [
+        { source: "train_model", target: "any_action", relationSlug: "subsumed_by" },
+        { source: "fine_tune", target: "train_model", relationSlug: "subsumed_by" },
       ],
       occurredAt: "2026-04-26T00:00:00Z",
     },
   },
   {
-    name: "vocab/action-hierarchy-closed",
-    label: "action, strict hierarchy-closed world",
+    name: "vocab/graph-multi-relation",
+    label: "multi-relation (subsumed_by, broader_than, equivalent_to)",
     body: {
-      name: "data-actions-v1",
+      name: "purposes-multi-relation-v1",
       description:
-        "Only declared edges hold. Consumers fall back to string equality for undeclared actions.",
-      world: "hierarchy-closed",
-      top: "any_action",
-      actions: [
-        { id: "any_action", parents: [] },
-        { id: "read", parents: ["any_action"] },
-        { id: "write", parents: ["any_action"] },
-        { id: "transform", parents: ["any_action"] },
-      ],
-      occurredAt: "2026-04-26T00:00:00Z",
-    },
-  },
-  {
-    name: "vocab/action-broad-tree",
-    label: "action, broader hierarchy with 8 entries",
-    body: {
-      name: "ml-pipeline-actions-v1",
-      description:
-        "Actions covering ingestion, training, and serving phases of an ML workflow.",
+        "Typed multi-relation knowledge graph. Subsumption, SKOS-style broader_than, and cross-vocab equivalent_to coexist on the same node set.",
       world: "closed-with-default",
-      top: "any_action",
-      actions: [
-        { id: "any_action", parents: [] },
-        { id: "ingest", parents: ["any_action"] },
-        { id: "annotate", parents: ["ingest"] },
-        { id: "preprocess", parents: ["ingest"] },
-        { id: "train", parents: ["any_action"] },
-        { id: "evaluate", parents: ["train"] },
-        { id: "serve", parents: ["any_action"] },
-        { id: "log", parents: ["serve"] },
+      nodes: [
+        { id: "any_purpose", kind: "purpose", label: "any purpose" },
+        { id: "research", kind: "purpose", label: "research" },
+        { id: "academic_publication", kind: "purpose", label: "academic publication" },
+        { id: "internal_review", kind: "purpose", label: "internal review" },
+        {
+          id: "scholarly_publication",
+          kind: "purpose",
+          label: "scholarly publication",
+          alternateLabels: ["scholarship"],
+        },
+      ],
+      edges: [
+        { source: "research", target: "any_purpose", relationSlug: "subsumed_by" },
+        { source: "academic_publication", target: "research", relationSlug: "subsumed_by" },
+        { source: "internal_review", target: "research", relationSlug: "subsumed_by" },
+        { source: "scholarly_publication", target: "academic_publication", relationSlug: "broader_than" },
+        { source: "academic_publication", target: "scholarly_publication", relationSlug: "equivalent_to" },
       ],
       occurredAt: "2026-04-26T00:00:00Z",
     },
   },
   {
-    name: "vocab/purpose-open",
-    label: "purpose, open-world (two example entries)",
+    name: "vocab/graph-owl-lite",
+    label: "OWL Lite property characteristics (transitive, inverseOf)",
     body: {
-      name: "purposes-open",
+      name: "policy-relations-v1",
+      description:
+        "Declares two relations as nodes with OWL Lite property characteristics. `subsumed_by` is transitive, so `A subsumed_by B subsumed_by C` implies `A subsumed_by C`. `subsumes` is the inverse. Reasoners and the orchestrator's traversal cache use these to close the relation algebraically.",
+      world: "closed-with-default",
+      nodes: [
+        {
+          id: "subsumed_by",
+          kind: "relation",
+          label: "subsumed_by",
+          transitive: true,
+          asymmetric: true,
+          irreflexive: true,
+          inverseOf: "subsumes",
+        },
+        {
+          id: "subsumes",
+          kind: "relation",
+          label: "subsumes",
+          transitive: true,
+          asymmetric: true,
+          irreflexive: true,
+          inverseOf: "subsumed_by",
+        },
+        { id: "any_action", kind: "action", label: "any action" },
+        { id: "modify_data", kind: "action", label: "modify data" },
+        { id: "redact", kind: "action", label: "redact" },
+      ],
+      edges: [
+        { source: "modify_data", target: "any_action", relationSlug: "subsumed_by" },
+        { source: "redact", target: "modify_data", relationSlug: "subsumed_by" },
+      ],
+      occurredAt: "2026-04-26T00:00:00Z",
+    },
+  },
+  {
+    name: "vocab/graph-skos-annotated",
+    label: "SKOS Core annotations (scopeNote, examples, externalIds)",
+    body: {
+      name: "data-categories-skos-v1",
+      description:
+        "Full SKOS Core annotation surface. scopeNote, example, historyNote, editorialNote, notation, externalIds against systems like Wikidata, and a SKOS Collection grouping nodes via member_of.",
       world: "open",
-      top: "any_purpose",
-      actions: [
-        { id: "any_purpose", parents: [] },
-        { id: "academic", parents: ["any_purpose"] },
+      nodes: [
+        {
+          id: "personal_data_category",
+          kind: "concept",
+          label: "personal data category",
+          notation: "PDC",
+          scopeNote: "Top of the personal-data taxonomy. Use a narrower term when possible.",
+        },
+        {
+          id: "contact_information",
+          kind: "concept",
+          label: "contact information",
+          alternateLabels: ["contact info"],
+          hiddenLabels: ["contact-details"],
+          example: "Email address, postal address, phone number.",
+          editorialNote: "Pending split into electronic vs. physical sub-categories.",
+          externalIds: [
+            { system: "wikidata", id: "Q1145903", matchType: "exact" },
+          ],
+          status: "active",
+          member_of: ["sensitive_categories"],
+        },
+        {
+          id: "sensitive_categories",
+          kind: "collection",
+          label: "Sensitive categories (SKOS Collection)",
+          historyNote: "Collection introduced 2026-Q2 to group GDPR special-category fields.",
+        },
+      ],
+      edges: [
+        {
+          source: "contact_information",
+          target: "personal_data_category",
+          relationSlug: "broader_than",
+          confidence: 0.95,
+        },
       ],
       occurredAt: "2026-04-26T00:00:00Z",
     },
   },
   {
-    name: "vocab/purpose-with-classes",
-    label: "purpose, entries tagged with attitudinal class",
+    name: "vocab/graph-vote-stances",
+    label: "deliberation vote stances (polar_opposite_of, symmetric)",
     body: {
-      name: "research-purposes-v1",
+      name: "vote-stances-v1",
       description:
-        "Purposes for research-data use, with each entry pinned to an attitudinal composition class.",
-      world: "closed-with-default",
-      top: "any_purpose",
-      actions: [
-        { id: "any_purpose", parents: [] },
+        "Default vocab for dev.idiolect.deliberationVote.stance. Seeds three-way stances and declares polar_opposite_of as symmetric so equivalence chasing across vocabs can route between agree and disagree consistently.",
+      world: "open",
+      nodes: [
         {
-          id: "academic_publication",
-          parents: ["any_purpose"],
-          class: "dev.idiolect.asserted_use",
+          id: "polar_opposite_of",
+          kind: "relation",
+          label: "polar opposite of",
+          symmetric: true,
+          irreflexive: true,
         },
-        {
-          id: "internal_review",
-          parents: ["any_purpose"],
-          class: "dev.idiolect.intended_use",
-        },
-        {
-          id: "third_party_audit",
-          parents: ["any_purpose"],
-          class: "dev.idiolect.permitted_use",
-        },
+        { id: "agree", kind: "stance", label: "agree" },
+        { id: "pass", kind: "stance", label: "pass / unsure" },
+        { id: "disagree", kind: "stance", label: "disagree" },
+      ],
+      edges: [
+        { source: "agree", target: "disagree", relationSlug: "polar_opposite_of" },
       ],
       occurredAt: "2026-04-26T00:00:00Z",
     },

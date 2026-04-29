@@ -9,6 +9,11 @@ import { dialectFixtures } from "../fixtures/dialect";
 import { vocabFixtures } from "../fixtures/vocab";
 import { communityFixtures } from "../fixtures/community";
 import { recommendationFixtures } from "../fixtures/recommendation";
+import {
+  deliberationFixtures,
+  deliberationStatementFixtures,
+  deliberationOutcomeFixtures,
+} from "../fixtures/deliberation";
 import { useSessionsStore } from "../sessions/store";
 import { usePdsRefresh } from "../sessions/pdsRefresh";
 import { deleteRecord } from "../sessions/deleteRecord";
@@ -20,6 +25,7 @@ const TOOL_TO_KIND: Record<ToolKey, DraftKind | null> = {
   vocab: "vocab",
   community: "community",
   recommendation: "recommendation",
+  deliberation: "deliberation",
   lexicon: null,
   lens: null,
 };
@@ -29,6 +35,9 @@ const KIND_LABEL: Record<DraftKind, string> = {
   vocab: "Vocabularies",
   community: "Communities",
   recommendation: "Recommendations",
+  deliberation: "Deliberations",
+  "deliberation-statement": "Deliberation statements",
+  "deliberation-outcome": "Deliberation outcomes",
 };
 
 interface Fixture {
@@ -42,6 +51,9 @@ const TEMPLATES: Record<DraftKind, Fixture[]> = {
   vocab: vocabFixtures,
   community: communityFixtures,
   recommendation: recommendationFixtures,
+  deliberation: deliberationFixtures,
+  "deliberation-statement": deliberationStatementFixtures,
+  "deliberation-outcome": deliberationOutcomeFixtures,
 };
 
 interface RemoteRecord {

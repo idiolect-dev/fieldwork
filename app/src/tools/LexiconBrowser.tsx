@@ -3,8 +3,18 @@ import { bundledLexicons } from "../lexicons/bundle";
 import { GardenSearch } from "../lexicons/GardenSearch";
 import { LexiconViewer } from "../lexicons/LexiconViewer";
 import { WalkthroughTrigger } from "../components/WalkthroughTrigger";
+import { useWalkthroughStore } from "../components/walkthroughStore";
 import { validateLexiconDocument } from "../panproto/validate";
 import type { ValidationResult } from "../panproto/validate";
+
+// Auto-selected when the lexicon walkthrough starts. Picked because
+// it exercises the broadest slice of lexicon features in one
+// document: a `record` main, eight `object` variants behind a tagged
+// union, refs, arrays of refs, `knownValues`, datetime / at-uri
+// formats, length-constrained strings, and optional vs. required
+// fields. The walkthrough's tab tour lands on real content instead
+// of the empty-state placeholder.
+const WALKTHROUGH_DEMO_NSID = "dev.idiolect.recommendation";
 
 interface LexiconEntry {
   nsid: string;
@@ -28,6 +38,20 @@ export function LexiconBrowser() {
       })),
     );
   }, []);
+
+  // When the lexicon walkthrough starts, pre-select a feature-rich
+  // demo lexicon so the tab tour ("JSON", "Definitions", "Fields",
+  // "Refs", "Diff", "Try") lands on real content rather than the
+  // "Select a lexicon" placeholder. Subscribed at the boundary so
+  // we don't fight user-driven selection during the rest of the
+  // session.
+  const walkthroughPhase = useWalkthroughStore((s) => s.phase);
+  const walkthroughFlow = useWalkthroughStore((s) => s.activeFlow);
+  useEffect(() => {
+    if (walkthroughPhase === "running" && walkthroughFlow === "lexicon") {
+      setActiveNsid(WALKTHROUGH_DEMO_NSID);
+    }
+  }, [walkthroughPhase, walkthroughFlow]);
 
   function importLexiconFile(file: File) {
     file

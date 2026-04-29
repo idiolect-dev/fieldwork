@@ -15,7 +15,7 @@ repository = "https://github.com/idiolect-dev/fieldwork"
 # fieldwork-core uses idiolect's generated record types directly so
 # its in-memory drafts can serde round-trip with whatever the user
 # pulls off a PDS.
-idiolect-records = { git = "https://github.com/idiolect-dev/idiolect.git", tag = "v0.5.0" }
+idiolect-records = { git = "https://github.com/idiolect-dev/idiolect.git", tag = "v0.7.0" }
 
 # Internal crates
 fieldwork-core = { path = "crates/fieldwork-core" }

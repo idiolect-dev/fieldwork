@@ -8,25 +8,42 @@
 //! body is exactly what a PDS expects under
 //! `com.atproto.repo.createRecord`.
 
-use idiolect_records::{Community, Dialect, Recommendation, Vocab};
+use idiolect_records::{
+    Community, Deliberation, DeliberationOutcome, DeliberationStatement, Dialect, Recommendation,
+    Vocab,
+};
 use serde::{Deserialize, Serialize};
 
-/// The five v1 record kinds fieldwork edits.
+/// The record kinds fieldwork edits.
 ///
 /// `LexiconView` does not have a corresponding `Draft` variant; the
 /// Lexicon Browser is read-only, so its state is represented in the
 /// browser store rather than as a workspace draft.
+///
+/// `DeliberationVote` is intentionally absent: votes are real-time
+/// participant actions, not authored governance records, and live
+/// in client UIs rather than fieldwork's drafting surface.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum DraftKind {
     /// `dev.idiolect.dialect`.
     Dialect,
-    /// `dev.idiolect.vocab` (action or purpose vocabulary).
+    /// `dev.idiolect.vocab` (legacy action tree or new graph shape).
     Vocab,
     /// `dev.idiolect.community`.
     Community,
     /// `dev.idiolect.recommendation`.
     Recommendation,
+    /// `dev.idiolect.deliberation` (community-scoped question or
+    /// proposal under collective consideration).
+    Deliberation,
+    /// `dev.idiolect.deliberationStatement` (a participant utterance
+    /// attached to a deliberation; typically a seed statement
+    /// authored by the community organiser).
+    DeliberationStatement,
+    /// `dev.idiolect.deliberationOutcome` (observer-published tally
+    /// for a closed deliberation; advanced surface).
+    DeliberationOutcome,
 }
 
 impl DraftKind {
@@ -38,6 +55,9 @@ impl DraftKind {
             Self::Vocab => "dev.idiolect.vocab",
             Self::Community => "dev.idiolect.community",
             Self::Recommendation => "dev.idiolect.recommendation",
+            Self::Deliberation => "dev.idiolect.deliberation",
+            Self::DeliberationStatement => "dev.idiolect.deliberationStatement",
+            Self::DeliberationOutcome => "dev.idiolect.deliberationOutcome",
         }
     }
 
@@ -49,6 +69,9 @@ impl DraftKind {
             Self::Vocab,
             Self::Community,
             Self::Recommendation,
+            Self::Deliberation,
+            Self::DeliberationStatement,
+            Self::DeliberationOutcome,
         ]
     }
 }
@@ -79,6 +102,14 @@ pub enum Draft {
     Community(Box<CommunityDraft>),
     /// Recommendation record draft.
     Recommendation(Box<RecommendationDraft>),
+    /// Deliberation record draft.
+    Deliberation(Box<DeliberationDraft>),
+    /// Deliberation statement record draft (typically a seed
+    /// statement an organiser pre-loads onto a deliberation).
+    DeliberationStatement(Box<DeliberationStatementDraft>),
+    /// Deliberation outcome record draft (observer-style tally; an
+    /// advanced surface for hand-authored outcomes).
+    DeliberationOutcome(Box<DeliberationOutcomeDraft>),
 }
 
 impl Draft {
@@ -90,6 +121,9 @@ impl Draft {
             Self::Vocab(_) => DraftKind::Vocab,
             Self::Community(_) => DraftKind::Community,
             Self::Recommendation(_) => DraftKind::Recommendation,
+            Self::Deliberation(_) => DraftKind::Deliberation,
+            Self::DeliberationStatement(_) => DraftKind::DeliberationStatement,
+            Self::DeliberationOutcome(_) => DraftKind::DeliberationOutcome,
         }
     }
 
@@ -102,6 +136,9 @@ impl Draft {
             Self::Vocab(d) => &d.id,
             Self::Community(d) => &d.id,
             Self::Recommendation(d) => &d.id,
+            Self::Deliberation(d) => &d.id,
+            Self::DeliberationStatement(d) => &d.id,
+            Self::DeliberationOutcome(d) => &d.id,
         }
     }
 
@@ -113,6 +150,9 @@ impl Draft {
             Self::Vocab(d) => &d.label,
             Self::Community(d) => &d.label,
             Self::Recommendation(d) => &d.label,
+            Self::Deliberation(d) => &d.label,
+            Self::DeliberationStatement(d) => &d.label,
+            Self::DeliberationOutcome(d) => &d.label,
         }
     }
 }
@@ -164,4 +204,39 @@ pub struct RecommendationDraft {
     pub label: String,
     /// The record body.
     pub body: Recommendation,
+}
+
+/// `dev.idiolect.deliberation` draft envelope.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeliberationDraft {
+    /// Workspace-assigned draft id.
+    pub id: String,
+    /// User-facing label (mirrors `body.topic`).
+    pub label: String,
+    /// The record body.
+    pub body: Deliberation,
+}
+
+/// `dev.idiolect.deliberationStatement` draft envelope.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeliberationStatementDraft {
+    /// Workspace-assigned draft id.
+    pub id: String,
+    /// User-facing label (DeliberationStatement has no `name` field;
+    /// the label is fieldwork-only).
+    pub label: String,
+    /// The record body.
+    pub body: DeliberationStatement,
+}
+
+/// `dev.idiolect.deliberationOutcome` draft envelope.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeliberationOutcomeDraft {
+    /// Workspace-assigned draft id.
+    pub id: String,
+    /// User-facing label (DeliberationOutcome has no `name` field;
+    /// the label is fieldwork-only).
+    pub label: String,
+    /// The record body.
+    pub body: DeliberationOutcome,
 }

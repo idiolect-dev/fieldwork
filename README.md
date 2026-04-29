@@ -7,9 +7,9 @@
 A workshop for community schema curation on atproto. Built on [idiolect].
 
 fieldwork composes the records that govern how a community translates
-between atproto schemas. Six tools share one in-memory workspace:
-authors compose dialects, vocabularies, communities, and
-recommendations against the `dev.idiolect.*` lexicon family, browse
+between atproto schemas. Seven tools share one in-memory workspace:
+authors compose dialects, vocabularies, communities, recommendations,
+and deliberations against the `dev.idiolect.*` lexicon family, browse
 the lexicons themselves, and upload protolab-authored panproto lenses
 to their own PDS. Drafts export as record JSON, copy as
 `idiolect-cli` invocations, or publish straight to the active session
@@ -19,15 +19,16 @@ Live at **<https://idiolect.dev/fieldwork/>**
 
 ## Tools
 
-Six tools, all working off the same in-memory **Workspace** so an
+Seven tools, all working off the same in-memory **Workspace** so an
 import in one tool feeds suggestions in the next.
 
 | Tool                       | What it builds                                                                                       | Record kind        |
 |----------------------------|------------------------------------------------------------------------------------------------------|--------------------|
 | `Dialect Composer`         | A dialect with preferred lenses, deprecations, and supersedes-chain.                                 | `dev.idiolect.dialect`        |
-| `Vocabulary Editor`        | An action / purpose hierarchy with a chosen world discipline.                                        | `dev.idiolect.vocab`          |
-| `Community Config`         | A community with members, conventions, endorsements, and core lens / schema sets.                    | `dev.idiolect.community`      |
+| `Vocabulary Editor`        | A typed multi-relation knowledge graph (OWL Lite property characteristics + SKOS Core annotations) or the legacy action / purpose tree. | `dev.idiolect.vocab`          |
+| `Community Config`         | A community with members, role assignments, conventions, endorsements, core lens / schema sets, and record-hosting policy. | `dev.idiolect.community`      |
 | `Recommendation Builder`   | A recommendation with a lens path, condition tree, and required-verifications block.                 | `dev.idiolect.recommendation` |
+| `Deliberation Composer`    | A community-scoped question or proposal under collective consideration, plus statements and observer outcomes. | `dev.idiolect.deliberation{,Statement,Outcome}` |
 | `Lens Manager`             | Lists your published lenses and uploads protolab-authored bodies to your PDS.                        | `dev.panproto.schema.lens`    |
 | `Lexicon Browser`          | Read-only view of every bundled `dev.idiolect.*` lexicon plus user-imported docs.                    | (read-only)                   |
 
@@ -112,7 +113,7 @@ are surfaced in the Sign-in menu:
 | Intent       | Scopes                                                                              |
 |--------------|-------------------------------------------------------------------------------------|
 | `read-only`  | `atproto`                                                                           |
-| `curator`    | `atproto repo:dev.idiolect.{dialect,vocab,community,recommendation} repo:dev.panproto.schema.lens` |
+| `curator`    | `atproto repo:dev.idiolect.{dialect,vocab,community,recommendation,deliberation,deliberationStatement,deliberationOutcome} repo:dev.panproto.schema.lens` |
 | `full`       | `atproto` + every `repo:dev.idiolect.*` collection plus the lens scope               |
 
 Once `dev.idiolect.auth.{curatorAccess,fullAccess}` permission-set

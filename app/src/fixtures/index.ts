@@ -7,6 +7,11 @@ import { dialectFixtures } from "./dialect";
 import { vocabFixtures } from "./vocab";
 import { communityFixtures } from "./community";
 import { recommendationFixtures } from "./recommendation";
+import {
+  deliberationFixtures,
+  deliberationStatementFixtures,
+  deliberationOutcomeFixtures,
+} from "./deliberation";
 import type { DraftKind } from "../workspace/types";
 
 export interface Fixture {
@@ -20,6 +25,9 @@ export const FIXTURES: Record<DraftKind, Fixture[]> = {
   vocab: vocabFixtures,
   community: communityFixtures,
   recommendation: recommendationFixtures,
+  deliberation: deliberationFixtures,
+  "deliberation-statement": deliberationStatementFixtures,
+  "deliberation-outcome": deliberationOutcomeFixtures,
 };
 
 /** Look up a fixture by its `name` field within the given kind's set. */

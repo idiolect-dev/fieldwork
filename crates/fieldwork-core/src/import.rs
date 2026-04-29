@@ -14,7 +14,8 @@ use serde_json::Value;
 use thiserror::Error;
 
 use crate::draft::{
-    CommunityDraft, DialectDraft, Draft, DraftKind, RecommendationDraft, VocabDraft,
+    CommunityDraft, DeliberationDraft, DeliberationOutcomeDraft, DeliberationStatementDraft,
+    DialectDraft, Draft, DraftKind, RecommendationDraft, VocabDraft,
 };
 
 /// Where the inbound JSON came from. Carried through to guidance so
@@ -106,5 +107,24 @@ pub fn import_record(
             label,
             body: serde_json::from_value(body).map_err(invalid(kind))?,
         })),
+        DraftKind::Deliberation => Draft::Deliberation(Box::new(DeliberationDraft {
+            id,
+            label,
+            body: serde_json::from_value(body).map_err(invalid(kind))?,
+        })),
+        DraftKind::DeliberationStatement => {
+            Draft::DeliberationStatement(Box::new(DeliberationStatementDraft {
+                id,
+                label,
+                body: serde_json::from_value(body).map_err(invalid(kind))?,
+            }))
+        }
+        DraftKind::DeliberationOutcome => {
+            Draft::DeliberationOutcome(Box::new(DeliberationOutcomeDraft {
+                id,
+                label,
+                body: serde_json::from_value(body).map_err(invalid(kind))?,
+            }))
+        }
     })
 }

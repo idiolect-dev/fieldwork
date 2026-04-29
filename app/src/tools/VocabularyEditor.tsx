@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useWorkspaceStore, draftsByKind } from "../workspace/store";
 import { mintDraftId } from "../workspace/ids";
@@ -14,13 +14,6 @@ import { useAtUriPlaceholder } from "../sessions/placeholders";
 import { AtUriAutocomplete } from "../components/AtUriAutocomplete";
 import { Tooltip } from "../components/Tooltip";
 import { DatetimeInput } from "../components/DatetimeInput";
-
-interface ActionEntry {
-  id: string;
-  parents: string[];
-  description?: string;
-  class?: string;
-}
 
 export function VocabularyEditor() {
   const drafts = useWorkspaceStore(useShallow((s) => draftsByKind(s, "vocab")));
@@ -43,8 +36,8 @@ export function VocabularyEditor() {
         body: {
           name: "untitled",
           world: "open",
-          top: "any_action",
-          actions: [{ id: "any_action", parents: [] }],
+          nodes: [],
+          edges: [],
           occurredAt: new Date().toISOString(),
         },
       },
@@ -60,10 +53,10 @@ export function VocabularyEditor() {
           <div>
             <div className="flex items-center gap-2"><h2 className="text-xl font-semibold">Vocabulary Editor</h2><WalkthroughTrigger flow="vocab" /></div>
             <p className="text-sm text-stone-600 max-w-prose">
-              An action / purpose hierarchy with a world discipline.
-              Encounters cite the at-uri to ground their action and
-              purpose strings; observations roll up encounter counts
-              under each ancestor entry.
+              A typed multi-relation knowledge graph. Encounters cite
+              the at-uri to ground their action and purpose strings.
+              Observations roll up encounter counts under each ancestor
+              node along the vocab's default relation.
             </p>
           </div>
           <div className="flex gap-2">
@@ -101,9 +94,6 @@ function VocabForm({
   onChange: (d: Draft) => void;
 }) {
   const body = draft.body.body;
-  const actions = (body.actions as ActionEntry[]) ?? [];
-  const top = (body.top as string) ?? "";
-  const issues = useMemo(() => validate(actions, top), [actions, top]);
 
   function patch(field: string, value: unknown) {
     const nextBody = { ...body, [field]: value };
@@ -119,10 +109,6 @@ function VocabForm({
         body: { ...body, name: label },
       },
     });
-  }
-
-  function setActions(next: ActionEntry[]) {
-    patch("actions", next);
   }
 
   return (
@@ -146,46 +132,27 @@ function VocabForm({
       <Field
         label={
           <>
-            World discipline{" "}
-            <Tooltip text="Picks the closure semantics for the lattice. open: undeclared ids are incomparable. hierarchy-closed: only declared edges hold. closed-with-default: the top entry rolls up everything undeclared.">
-              <span className="text-stone-400 font-normal cursor-help">
-                ?
-              </span>
+            World{" "}
+            <Tooltip text="Closure semantics for the vocab. open: undeclared ids are incomparable. hierarchy-closed: only declared edges hold. closed-with-default: a designated top node rolls up everything undeclared. Per-relation overrides live on each relation-kind node.">
+              <span className="text-stone-400 font-normal cursor-help">?</span>
             </Tooltip>
           </>
         }
       >
         <div data-walk="vocab-world">
           <select
-          value={(body.world as string) ?? "open"}
-          onChange={(e) => patch("world", e.target.value)}
-          className="px-2 py-1 border border-stone-300 rounded w-fit"
-        >
-          <option value="open">open (anyone can extend)</option>
-          <option value="hierarchy-closed">
-            hierarchy-closed (declared subsumers only)
-          </option>
-          <option value="closed-with-default">
-            closed-with-default (top rolls up everything)
-          </option>
-        </select>
-        </div>
-      </Field>
-      <Field label="Top action id">
-        <div data-walk="vocab-top">
-          <input
-            type="text"
-            value={top}
-            onChange={(e) => patch("top", e.target.value)}
-            placeholder="any_action"
-            list={`vocab-entries-${draft.body.id}`}
-            className="w-full px-2 py-1.5 border border-stone-300 rounded font-mono text-sm"
-          />
-          <datalist id={`vocab-entries-${draft.body.id}`}>
-            {actions.map((a) => (
-              <option key={a.id} value={a.id} />
-            ))}
-          </datalist>
+            value={(body.world as string) ?? "open"}
+            onChange={(e) => patch("world", e.target.value)}
+            className="px-2 py-1 border border-stone-300 rounded w-fit"
+          >
+            <option value="open">open (anyone can extend)</option>
+            <option value="hierarchy-closed">
+              hierarchy-closed (declared edges only)
+            </option>
+            <option value="closed-with-default">
+              closed-with-default (top rolls up everything)
+            </option>
+          </select>
         </div>
       </Field>
       <Field label="Supersedes (optional at-uri to a prior vocabulary)">
@@ -209,375 +176,21 @@ function VocabForm({
         />
       </Field>
 
-      <div className="flex items-baseline justify-between mt-4">
-        <h3 className="font-semibold">Entries</h3>
-        <span className="text-xs text-stone-500">
-          {actions.length} {actions.length === 1 ? "entry" : "entries"}
-        </span>
-      </div>
-      <div data-walk="vocab-entries">
-        <ActionTable actions={actions} onChange={setActions} />
-      </div>
-
-      <ValidationPanel issues={issues} />
-      <div data-walk="vocab-preview">
-        <HierarchyPreview actions={actions} top={top} />
+      <div data-walk="vocab-graph">
+        <GraphSection
+          nodes={(body.nodes as VocabNode[] | undefined) ?? []}
+          edges={(body.edges as VocabEdge[] | undefined) ?? []}
+          defaultRelation={(body.defaultRelation as string | undefined) ?? ""}
+          onNodes={(next) => patch("nodes", next.length ? next : undefined)}
+          onEdges={(next) => patch("edges", next.length ? next : undefined)}
+          onDefaultRelation={(v) =>
+            patch("defaultRelation", v.trim() || undefined)
+          }
+        />
       </div>
 
       <DiffPane draft={draft} />
     </form>
-  );
-}
-
-function ActionTable({
-  actions,
-  onChange,
-}: {
-  actions: ActionEntry[];
-  onChange: (a: ActionEntry[]) => void;
-}) {
-  function patchEntry(i: number, partial: Partial<ActionEntry>) {
-    const next = actions.map((a, j) => (i === j ? { ...a, ...partial } : a));
-    onChange(next);
-  }
-  function addEntry() {
-    onChange([...actions, { id: "", parents: [] }]);
-  }
-  function removeEntry(i: number) {
-    onChange(actions.filter((_, j) => j !== i));
-  }
-  function moveEntry(i: number, dir: -1 | 1) {
-    const j = i + dir;
-    if (j < 0 || j >= actions.length) return;
-    const next = actions.slice();
-    [next[i], next[j]] = [next[j], next[i]];
-    onChange(next);
-  }
-
-  return (
-    <div className="border border-stone-200 rounded overflow-x-auto">
-      <table className="w-full text-sm min-w-[640px]">
-        <thead className="bg-stone-100 text-left">
-          <tr>
-            <th className="px-2 py-1 w-8" />
-            <th className="px-2 py-1">id</th>
-            <th className="px-2 py-1">parents</th>
-            <th className="px-2 py-1">class (optional)</th>
-            <th className="px-2 py-1">description</th>
-            <th className="px-2 py-1 w-8" />
-          </tr>
-        </thead>
-        <tbody>
-          {actions.map((a, i) => (
-            <tr key={i} className="border-t border-stone-100 align-top">
-              <td className="p-1 text-stone-400 text-[10px] font-mono leading-tight">
-                <button
-                  type="button"
-                  onClick={() => moveEntry(i, -1)}
-                  className="block w-full hover:text-stone-700"
-                  title="Move up"
-                  disabled={i === 0}
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  onClick={() => moveEntry(i, 1)}
-                  className="block w-full hover:text-stone-700"
-                  title="Move down"
-                  disabled={i === actions.length - 1}
-                >
-                  ↓
-                </button>
-              </td>
-              <td className="p-1">
-                <input
-                  type="text"
-                  value={a.id}
-                  onChange={(e) => patchEntry(i, { id: e.target.value })}
-                  className="w-full px-2 py-1 border border-stone-200 rounded font-mono text-xs"
-                />
-              </td>
-              <td className="p-1">
-                <ParentsPicker
-                  parents={a.parents}
-                  selfId={a.id}
-                  available={actions.map((x) => x.id).filter(Boolean)}
-                  onChange={(next) => patchEntry(i, { parents: next })}
-                />
-              </td>
-              <td className="p-1">
-                <input
-                  type="text"
-                  value={a.class ?? ""}
-                  onChange={(e) =>
-                    patchEntry(i, { class: e.target.value || undefined })
-                  }
-                  placeholder="asserted_use"
-                  list="vocab-class-options"
-                  className="w-full px-2 py-1 border border-stone-200 rounded font-mono text-xs"
-                />
-                <datalist id="vocab-class-options">
-                  <option value="dev.idiolect.asserted_use" />
-                  <option value="dev.idiolect.intended_use" />
-                  <option value="dev.idiolect.permitted_use" />
-                </datalist>
-              </td>
-              <td className="p-1">
-                <input
-                  type="text"
-                  value={a.description ?? ""}
-                  onChange={(e) =>
-                    patchEntry(i, {
-                      description: e.target.value || undefined,
-                    })
-                  }
-                  className="w-full px-2 py-1 border border-stone-200 rounded text-xs"
-                />
-              </td>
-              <td className="p-1 text-right">
-                <button
-                  type="button"
-                  onClick={() => removeEntry(i)}
-                  className="text-stone-500 text-xs"
-                  title="Delete row"
-                >
-                  ×
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="p-2 border-t border-stone-100 bg-stone-50">
-        <button
-          type="button"
-          onClick={addEntry}
-          className="text-sm text-stone-700"
-        >
-          + entry
-        </button>
-      </div>
-    </div>
-  );
-}
-
-interface Issue {
-  level: "error" | "warning";
-  message: string;
-}
-
-// Lint pass over the vocabulary structure. Surfaces issues that the
-// PDS schema validator wouldn't catch on its own (cycles, undeclared
-// parents, duplicate ids, missing top, wrong root parents).
-function validate(actions: ActionEntry[], top: string): Issue[] {
-  const issues: Issue[] = [];
-  const ids = new Set<string>();
-  const dupes = new Set<string>();
-  for (const a of actions) {
-    if (!a.id) continue;
-    if (ids.has(a.id)) dupes.add(a.id);
-    ids.add(a.id);
-  }
-  for (const id of dupes) {
-    issues.push({ level: "error", message: `Duplicate id: ${id}` });
-  }
-
-  if (top && !ids.has(top)) {
-    issues.push({
-      level: "error",
-      message: `Top "${top}" is not declared as an entry`,
-    });
-  }
-
-  for (const a of actions) {
-    if (!a.id) {
-      issues.push({ level: "error", message: "Entry has empty id" });
-      continue;
-    }
-    for (const p of a.parents) {
-      if (!ids.has(p)) {
-        issues.push({
-          level: "error",
-          message: `Entry "${a.id}" references undeclared parent "${p}"`,
-        });
-      }
-      if (p === a.id) {
-        issues.push({
-          level: "error",
-          message: `Entry "${a.id}" lists itself as a parent`,
-        });
-      }
-    }
-    if (a.id === top && a.parents.length > 0) {
-      issues.push({
-        level: "warning",
-        message: `Top "${a.id}" should have no parents`,
-      });
-    }
-    if (a.id !== top && a.parents.length === 0) {
-      issues.push({
-        level: "warning",
-        message: `Entry "${a.id}" is orphan (no parents and not the top)`,
-      });
-    }
-  }
-
-  // Cycle detection via iterative DFS.
-  const parents = new Map<string, string[]>();
-  for (const a of actions) parents.set(a.id, a.parents);
-  const visiting = new Set<string>();
-  const visited = new Set<string>();
-  function dfs(id: string, path: string[]): void {
-    if (visited.has(id)) return;
-    if (visiting.has(id)) {
-      const cycle = [...path.slice(path.indexOf(id)), id].join(" → ");
-      issues.push({ level: "error", message: `Cycle detected: ${cycle}` });
-      return;
-    }
-    visiting.add(id);
-    for (const p of parents.get(id) ?? []) {
-      if (parents.has(p)) dfs(p, [...path, id]);
-    }
-    visiting.delete(id);
-    visited.add(id);
-  }
-  for (const id of ids) dfs(id, []);
-
-  return issues;
-}
-
-function ValidationPanel({ issues }: { issues: Issue[] }) {
-  if (issues.length === 0) {
-    return (
-      <div className="border border-emerald-200 bg-emerald-50 text-emerald-900 text-xs px-3 py-2 rounded">
-        No structural issues found.
-      </div>
-    );
-  }
-  return (
-    <div className="border border-stone-200 rounded">
-      <div className="bg-stone-100 text-stone-700 text-xs font-medium px-3 py-1">
-        Structural issues ({issues.length})
-      </div>
-      <ul className="divide-y divide-stone-100">
-        {issues.map((iss, i) => (
-          <li
-            key={i}
-            className={`px-3 py-2 text-xs ${
-              iss.level === "error"
-                ? "bg-red-50 text-red-900"
-                : "bg-amber-50 text-amber-900"
-            }`}
-          >
-            <span className="font-mono uppercase mr-2">{iss.level}</span>
-            {iss.message}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-interface TreeNode {
-  id: string;
-  children: TreeNode[];
-}
-
-// Build a parents-first tree rooted at `top`. Multi-parent entries
-// only appear under their first parent in the displayed tree;
-// remaining-parent edges are summarised in a footer beneath each
-// entry's row.
-function buildTree(actions: ActionEntry[], top: string): TreeNode | null {
-  if (!top) return null;
-  const byId = new Map<string, ActionEntry>();
-  for (const a of actions) byId.set(a.id, a);
-  if (!byId.has(top)) return null;
-
-  // children[parent] = ids of entries that list parent first.
-  const children = new Map<string, string[]>();
-  for (const a of actions) {
-    if (a.id === top) continue;
-    const head = a.parents[0];
-    if (!head || !byId.has(head)) continue;
-    const arr = children.get(head) ?? [];
-    arr.push(a.id);
-    children.set(head, arr);
-  }
-
-  const seen = new Set<string>();
-  function build(id: string): TreeNode {
-    seen.add(id);
-    const kids = (children.get(id) ?? [])
-      .filter((c) => !seen.has(c))
-      .map((c) => build(c));
-    return { id, children: kids };
-  }
-  return build(top);
-}
-
-function HierarchyPreview({
-  actions,
-  top,
-}: {
-  actions: ActionEntry[];
-  top: string;
-}) {
-  const tree = useMemo(() => buildTree(actions, top), [actions, top]);
-  const byId = useMemo(() => {
-    const m = new Map<string, ActionEntry>();
-    for (const a of actions) m.set(a.id, a);
-    return m;
-  }, [actions]);
-
-  if (!tree) {
-    return (
-      <div className="border border-stone-200 rounded p-3 text-xs text-stone-500">
-        Hierarchy preview unavailable; declare a top entry first.
-      </div>
-    );
-  }
-
-  return (
-    <div className="border border-stone-200 rounded">
-      <div className="bg-stone-100 text-stone-700 text-xs font-medium px-3 py-1">
-        Hierarchy preview
-      </div>
-      <div className="p-3 text-xs font-mono">
-        <Branch node={tree} byId={byId} depth={0} />
-      </div>
-    </div>
-  );
-}
-
-function Branch({
-  node,
-  byId,
-  depth,
-}: {
-  node: TreeNode;
-  byId: Map<string, ActionEntry>;
-  depth: number;
-}) {
-  const entry = byId.get(node.id);
-  const extraParents = entry ? entry.parents.slice(1) : [];
-  return (
-    <div style={{ paddingLeft: depth * 14 }}>
-      <div className="flex items-baseline gap-2">
-        <span className="text-stone-800">{node.id}</span>
-        {entry?.class && (
-          <span className="text-[10px] text-stone-500">[{entry.class}]</span>
-        )}
-        {extraParents.length > 0 && (
-          <span className="text-[10px] text-amber-700">
-            also under: {extraParents.join(", ")}
-          </span>
-        )}
-      </div>
-      {node.children.map((c) => (
-        <Branch key={c.id} node={c} byId={byId} depth={depth + 1} />
-      ))}
-    </div>
   );
 }
 
@@ -596,69 +209,943 @@ function Field({
   );
 }
 
-function ParentsPicker({
-  parents,
-  selfId,
-  available,
-  onChange,
-}: {
-  parents: string[];
-  selfId: string;
-  available: string[];
-  onChange: (next: string[]) => void;
-}) {
-  const candidates = available.filter(
-    (id) => id !== selfId && !parents.includes(id),
-  );
+// ----------------------------------------------------------------------
+// Graph-shape editor (knowledge graph: nodes + typed edges).
+//
+// Mirrors the v0.7.0 dev.idiolect.vocab `nodes` + `edges` arrays and
+// surfaces every field the lexicon declares: SKOS-aligned annotations
+// (label / alternateLabels / hiddenLabels / scopeNote / example /
+// historyNote / editorialNote / changeNote / notation), external-id
+// mappings into Wikidata / ROR / ORCID / SKOS / etc, status +
+// deprecatedBy, subkindUri, plus the full OWL Lite property
+// characteristic set on relation-kind nodes (symmetric / asymmetric /
+// transitive / reflexive / irreflexive / functional /
+// inverseFunctional / inverseOf), and edge metadata (weight,
+// confidence, temporal validity, source attestation).
+// ----------------------------------------------------------------------
 
-  function add(id: string) {
-    if (!id) return;
-    onChange([...parents, id]);
+interface VocabNode {
+  id: string;
+  kind?: string;
+  kindVocab?: { uri?: string };
+  subkindUri?: string;
+  label?: string;
+  alternateLabels?: string[];
+  hiddenLabels?: string[];
+  description?: string;
+  scopeNote?: string;
+  example?: string;
+  historyNote?: string;
+  editorialNote?: string;
+  changeNote?: string;
+  notation?: string;
+  externalIds?: ExternalId[];
+  status?: string;
+  statusVocab?: { uri?: string };
+  deprecatedBy?: string;
+  relationMetadata?: RelationMetadata;
+}
+
+interface ExternalId {
+  system: string;
+  systemVocab?: { uri?: string };
+  identifier: string;
+  uri?: string;
+  matchType?: string;
+  matchTypeVocab?: { uri?: string };
+}
+
+interface RelationMetadata {
+  symmetric?: boolean;
+  asymmetric?: boolean;
+  transitive?: boolean;
+  reflexive?: boolean;
+  irreflexive?: boolean;
+  functional?: boolean;
+  inverseFunctional?: boolean;
+  inverseOf?: string;
+  world?: string;
+}
+
+interface VocabEdge {
+  source: string;
+  target: string;
+  relationSlug: string;
+  relationVocab?: { uri?: string };
+  relationUri?: string;
+  weight?: number;
+  metadata?: EdgeMetadata;
+}
+
+interface EdgeMetadata {
+  confidence?: number;
+  startDate?: string;
+  endDate?: string;
+  source?: string;
+}
+
+const NODE_KIND_KNOWN = ["concept", "relation", "instance", "type", "collection"] as const;
+const RELATION_SLUG_KNOWN = [
+  "subsumed_by",
+  "broader_than",
+  "narrower_than",
+  "equivalent_to",
+  "polar_opposite_of",
+  "related_to",
+  "instance_of",
+  "part_of",
+  "member_of",
+] as const;
+const NODE_STATUS_KNOWN = ["proposed", "provisional", "established", "deprecated"] as const;
+const EXTERNAL_ID_SYSTEM_KNOWN = [
+  "wikidata",
+  "ror",
+  "orcid",
+  "isni",
+  "viaf",
+  "lcsh",
+  "fast",
+  "skos",
+  "dublin-core",
+  "schema-org",
+  "mesh",
+  "aat",
+] as const;
+const MATCH_TYPE_KNOWN = ["exact", "close", "broader", "narrower", "related"] as const;
+const RELATION_WORLD_KNOWN = ["closed-with-default", "open", "hierarchy-closed"] as const;
+
+function GraphSection({
+  nodes,
+  edges,
+  defaultRelation,
+  onNodes,
+  onEdges,
+  onDefaultRelation,
+}: {
+  nodes: VocabNode[];
+  edges: VocabEdge[];
+  defaultRelation: string;
+  onNodes: (next: VocabNode[]) => void;
+  onEdges: (next: VocabEdge[]) => void;
+  onDefaultRelation: (v: string) => void;
+}) {
+  const nodeIds = nodes.map((n) => n.id).filter(Boolean);
+
+  function patchNode(i: number, partial: Partial<VocabNode>) {
+    onNodes(nodes.map((n, j) => (i === j ? { ...n, ...partial } : n)));
   }
-  function remove(id: string) {
-    onChange(parents.filter((p) => p !== id));
+  function addNode() {
+    onNodes([...nodes, { id: "", kind: "concept" }]);
+  }
+  function removeNode(i: number) {
+    onNodes(nodes.filter((_, j) => j !== i));
+  }
+  function moveNode(i: number, dir: -1 | 1) {
+    const j = i + dir;
+    if (j < 0 || j >= nodes.length) return;
+    const next = nodes.slice();
+    [next[i], next[j]] = [next[j], next[i]];
+    onNodes(next);
+  }
+
+  function patchEdge(i: number, partial: Partial<VocabEdge>) {
+    onEdges(edges.map((e, j) => (i === j ? { ...e, ...partial } : e)));
+  }
+  function addEdge() {
+    onEdges([...edges, { source: "", target: "", relationSlug: "subsumed_by" }]);
+  }
+  function removeEdge(i: number) {
+    onEdges(edges.filter((_, j) => j !== i));
   }
 
   return (
-    <div className="flex flex-col gap-1">
-      {parents.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1">
-          {parents.map((p) => (
-            <span
-              key={p}
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-sky-100 text-sky-900 font-mono text-[11px]"
+    <details open className="border border-stone-200 rounded">
+      <summary className="bg-stone-100 text-stone-700 text-sm font-semibold px-3 py-2 cursor-pointer">
+        Graph shape: nodes + edges{" "}
+        <span className="text-xs text-stone-500 font-normal ml-2">
+          {nodes.length} node{nodes.length === 1 ? "" : "s"},{" "}
+          {edges.length} edge{edges.length === 1 ? "" : "s"}
+        </span>
+      </summary>
+      <div className="p-3 space-y-4">
+        <p className="text-xs text-stone-600 max-w-prose">
+          The graph shape lets you author vocabularies as typed
+          nodes + typed edges, modeled on{" "}
+          <code>pub.chive.graph.{`{node,edge}`}</code>. Nodes carry
+          SKOS Core annotations and OWL Lite property characteristics;
+          edges carry typed relations beyond the legacy{" "}
+          <code>subsumed_by</code> tree. Authors fill what they need;
+          everything is optional except <code>id</code>.
+        </p>
+
+        <Field label="Default relation at-uri (optional)">
+          <AtUriAutocomplete
+            value={defaultRelation}
+            onChange={onDefaultRelation}
+            expectedCollection="dev.idiolect.vocab"
+            placeholder="at://...idiolect/dev.idiolect.vocab/relation-types"
+          />
+        </Field>
+
+        <div>
+          <div className="flex items-baseline justify-between mb-1">
+            <h4 className="font-semibold text-sm">Nodes</h4>
+            <button
+              type="button"
+              onClick={addNode}
+              className="text-xs text-stone-700 underline"
             >
-              {p}
-              <button
-                type="button"
-                onClick={() => remove(p)}
-                className="text-sky-700 hover:text-sky-900"
-                title={`Remove ${p}`}
-              >
-                ×
-              </button>
-            </span>
-          ))}
+              + node
+            </button>
+          </div>
+          {nodes.length === 0 ? (
+            <p className="text-xs text-stone-500">
+              No nodes declared. Click <em>+ node</em> to start.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {nodes.map((n, i) => (
+                <li
+                  key={i}
+                  className="border border-stone-200 rounded p-2 bg-white"
+                >
+                  <NodeEditor
+                    node={n}
+                    onChange={(p) => patchNode(i, p)}
+                    onMoveUp={() => moveNode(i, -1)}
+                    onMoveDown={() => moveNode(i, 1)}
+                    onRemove={() => removeNode(i)}
+                    canMoveUp={i > 0}
+                    canMoveDown={i < nodes.length - 1}
+                    relationNodeIds={nodes
+                      .filter((m) => m.kind === "relation" && m.id !== n.id)
+                      .map((m) => m.id)}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      )}
-      {candidates.length > 0 && (
-        <select
-          value=""
-          onChange={(e) => {
-            add(e.target.value);
-          }}
-          className="self-start px-1 py-0.5 border border-stone-200 rounded font-mono text-[11px] text-stone-600 bg-white"
+
+        <div>
+          <div className="flex items-baseline justify-between mb-1">
+            <h4 className="font-semibold text-sm">Edges</h4>
+            <button
+              type="button"
+              onClick={addEdge}
+              className="text-xs text-stone-700 underline"
+            >
+              + edge
+            </button>
+          </div>
+          {edges.length === 0 ? (
+            <p className="text-xs text-stone-500">
+              No edges declared. Click <em>+ edge</em> to add a typed
+              edge between two nodes.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {edges.map((e, i) => (
+                <li
+                  key={i}
+                  className="border border-stone-200 rounded p-2 bg-white"
+                >
+                  <EdgeEditor
+                    edge={e}
+                    nodeIds={nodeIds}
+                    onChange={(p) => patchEdge(i, p)}
+                    onRemove={() => removeEdge(i)}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function NodeEditor({
+  node,
+  onChange,
+  onMoveUp,
+  onMoveDown,
+  onRemove,
+  canMoveUp,
+  canMoveDown,
+  relationNodeIds,
+}: {
+  node: VocabNode;
+  onChange: (p: Partial<VocabNode>) => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onRemove: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  relationNodeIds: string[];
+}) {
+  const isRelation = node.kind === "relation";
+  const meta = node.relationMetadata ?? {};
+  const externalIds = node.externalIds ?? [];
+  const altLabels = node.alternateLabels ?? [];
+  const hiddenLabels = node.hiddenLabels ?? [];
+
+  function patchMeta(p: Partial<RelationMetadata>) {
+    onChange({ relationMetadata: { ...meta, ...p } });
+  }
+
+  return (
+    <div className="space-y-2 text-xs">
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          type="text"
+          value={node.id}
+          onChange={(e) => onChange({ id: e.target.value })}
+          placeholder="node id (slug)"
+          className="flex-1 min-w-[10rem] px-2 py-1 border border-stone-200 rounded font-mono"
+        />
+        <OpenEnumSelect
+          value={node.kind ?? ""}
+          knownValues={NODE_KIND_KNOWN}
+          onChange={(v) => onChange({ kind: v || undefined })}
+          width="narrow"
+          ariaLabel="kind"
+        />
+        <button
+          type="button"
+          onClick={onMoveUp}
+          disabled={!canMoveUp}
+          className="text-stone-500 disabled:text-stone-300 px-1"
+          title="Move up"
         >
-          <option value="" disabled>
-            + parent
-          </option>
-          {candidates.map((id) => (
-            <option key={id} value={id}>
-              {id}
-            </option>
-          ))}
-        </select>
+          ↑
+        </button>
+        <button
+          type="button"
+          onClick={onMoveDown}
+          disabled={!canMoveDown}
+          className="text-stone-500 disabled:text-stone-300 px-1"
+          title="Move down"
+        >
+          ↓
+        </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="text-stone-500 hover:text-red-700 px-1"
+          title="Remove"
+        >
+          ×
+        </button>
+      </div>
+
+      <details className="ml-2">
+        <summary className="text-stone-600 cursor-pointer">
+          SKOS labels &amp; annotations
+        </summary>
+        <div className="mt-1 grid grid-cols-1 gap-1 ml-3">
+          <input
+            type="text"
+            value={node.label ?? ""}
+            onChange={(e) => onChange({ label: e.target.value || undefined })}
+            placeholder="label (skos:prefLabel)"
+            className="w-full px-2 py-1 border border-stone-200 rounded"
+          />
+          <StringArrayEditor
+            values={altLabels}
+            onChange={(v) =>
+              onChange({ alternateLabels: v.length ? v : undefined })
+            }
+            placeholder="alternate label"
+            label="alternateLabels (skos:altLabel)"
+          />
+          <StringArrayEditor
+            values={hiddenLabels}
+            onChange={(v) =>
+              onChange({ hiddenLabels: v.length ? v : undefined })
+            }
+            placeholder="hidden label"
+            label="hiddenLabels (skos:hiddenLabel)"
+          />
+          <textarea
+            value={node.description ?? ""}
+            onChange={(e) =>
+              onChange({ description: e.target.value || undefined })
+            }
+            rows={2}
+            placeholder="description (skos:definition)"
+            className="w-full px-2 py-1 border border-stone-200 rounded"
+          />
+          <textarea
+            value={node.scopeNote ?? ""}
+            onChange={(e) =>
+              onChange({ scopeNote: e.target.value || undefined })
+            }
+            rows={2}
+            placeholder="scopeNote (skos:scopeNote, application guidance)"
+            className="w-full px-2 py-1 border border-stone-200 rounded"
+          />
+          <input
+            type="text"
+            value={node.example ?? ""}
+            onChange={(e) =>
+              onChange({ example: e.target.value || undefined })
+            }
+            placeholder="example (skos:example)"
+            className="w-full px-2 py-1 border border-stone-200 rounded"
+          />
+          <input
+            type="text"
+            value={node.historyNote ?? ""}
+            onChange={(e) =>
+              onChange({ historyNote: e.target.value || undefined })
+            }
+            placeholder="historyNote (skos:historyNote)"
+            className="w-full px-2 py-1 border border-stone-200 rounded"
+          />
+          <input
+            type="text"
+            value={node.editorialNote ?? ""}
+            onChange={(e) =>
+              onChange({ editorialNote: e.target.value || undefined })
+            }
+            placeholder="editorialNote (skos:editorialNote)"
+            className="w-full px-2 py-1 border border-stone-200 rounded"
+          />
+          <input
+            type="text"
+            value={node.changeNote ?? ""}
+            onChange={(e) =>
+              onChange({ changeNote: e.target.value || undefined })
+            }
+            placeholder="changeNote (skos:changeNote)"
+            className="w-full px-2 py-1 border border-stone-200 rounded"
+          />
+          <input
+            type="text"
+            value={node.notation ?? ""}
+            onChange={(e) =>
+              onChange({ notation: e.target.value || undefined })
+            }
+            placeholder="notation (skos:notation, e.g. Dewey 004)"
+            className="w-full px-2 py-1 border border-stone-200 rounded font-mono"
+          />
+        </div>
+      </details>
+
+      <details className="ml-2">
+        <summary className="text-stone-600 cursor-pointer">
+          External ids ({externalIds.length})
+        </summary>
+        <ExternalIdsEditor
+          values={externalIds}
+          onChange={(v) =>
+            onChange({ externalIds: v.length ? v : undefined })
+          }
+        />
+      </details>
+
+      <details className="ml-2">
+        <summary className="text-stone-600 cursor-pointer">
+          Status &amp; lifecycle
+        </summary>
+        <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-1 ml-3">
+          <OpenEnumSelect
+            value={node.status ?? ""}
+            knownValues={NODE_STATUS_KNOWN}
+            onChange={(v) => onChange({ status: v || undefined })}
+            ariaLabel="status"
+          />
+          <AtUriAutocomplete
+            value={node.deprecatedBy ?? ""}
+            onChange={(v) =>
+              onChange({ deprecatedBy: v.trim() || undefined })
+            }
+            placeholder="deprecatedBy at-uri (optional successor)"
+            className="w-full px-2 py-1 border border-stone-200 rounded font-mono"
+          />
+          <AtUriAutocomplete
+            value={node.subkindUri ?? ""}
+            onChange={(v) =>
+              onChange({ subkindUri: v.trim() || undefined })
+            }
+            placeholder="subkindUri at-uri (typed metaclass)"
+            className="w-full px-2 py-1 border border-stone-200 rounded font-mono"
+          />
+        </div>
+      </details>
+
+      {isRelation && (
+        <details className="ml-2" open>
+          <summary className="text-stone-600 cursor-pointer font-medium">
+            OWL Lite relation metadata
+          </summary>
+          <div className="mt-1 ml-3 space-y-1">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
+              <BoolField
+                value={meta.symmetric}
+                onChange={(v) => patchMeta({ symmetric: v })}
+                label="symmetric"
+                tooltip="A R B implies B R A"
+              />
+              <BoolField
+                value={meta.asymmetric}
+                onChange={(v) => patchMeta({ asymmetric: v })}
+                label="asymmetric"
+                tooltip="A R B implies NOT (B R A); mutually exclusive with symmetric"
+              />
+              <BoolField
+                value={meta.transitive}
+                onChange={(v) => patchMeta({ transitive: v })}
+                label="transitive"
+                tooltip="A R B and B R C imply A R C. Walks compute the closure"
+              />
+              <BoolField
+                value={meta.reflexive}
+                onChange={(v) => patchMeta({ reflexive: v })}
+                label="reflexive"
+                tooltip="A R A holds for every A"
+              />
+              <BoolField
+                value={meta.irreflexive}
+                onChange={(v) => patchMeta({ irreflexive: v })}
+                label="irreflexive"
+                tooltip="No A R A. Mutually exclusive with reflexive"
+              />
+              <BoolField
+                value={meta.functional}
+                onChange={(v) => patchMeta({ functional: v })}
+                label="functional"
+                tooltip="At most one target per source"
+              />
+              <BoolField
+                value={meta.inverseFunctional}
+                onChange={(v) => patchMeta({ inverseFunctional: v })}
+                label="inverseFunctional"
+                tooltip="At most one source per target. Useful for identifier-like relations"
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+              <NodeIdInput
+                value={meta.inverseOf ?? ""}
+                onChange={(v) =>
+                  patchMeta({ inverseOf: v.trim() || undefined })
+                }
+                nodeIds={relationNodeIds}
+                placeholder="inverseOf (pick a relation node, e.g. narrower_than)"
+              />
+              <select
+                value={meta.world ?? ""}
+                onChange={(e) =>
+                  patchMeta({ world: e.target.value || undefined })
+                }
+                className="w-full px-2 py-1 border border-stone-200 rounded"
+                aria-label="per-relation world override"
+              >
+                <option value="">(inherit vocab world)</option>
+                {RELATION_WORLD_KNOWN.map((w) => (
+                  <option key={w} value={w}>
+                    world: {w}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </details>
       )}
     </div>
   );
+}
+
+function EdgeEditor({
+  edge,
+  nodeIds,
+  onChange,
+  onRemove,
+}: {
+  edge: VocabEdge;
+  nodeIds: string[];
+  onChange: (p: Partial<VocabEdge>) => void;
+  onRemove: () => void;
+}) {
+  const meta = edge.metadata ?? {};
+  function patchMeta(p: Partial<EdgeMetadata>) {
+    onChange({
+      metadata: trimMetadata({ ...meta, ...p }),
+    });
+  }
+
+  return (
+    <div className="space-y-1 text-xs">
+      <div className="flex flex-wrap items-center gap-2">
+        <NodeIdInput
+          value={edge.source}
+          onChange={(v) => onChange({ source: v })}
+          nodeIds={nodeIds}
+          placeholder="source"
+        />
+        <OpenEnumSelect
+          value={edge.relationSlug}
+          knownValues={RELATION_SLUG_KNOWN}
+          onChange={(v) => onChange({ relationSlug: v })}
+          ariaLabel="relation"
+        />
+        <NodeIdInput
+          value={edge.target}
+          onChange={(v) => onChange({ target: v })}
+          nodeIds={nodeIds}
+          placeholder="target"
+        />
+        <button
+          type="button"
+          onClick={onRemove}
+          className="text-stone-500 hover:text-red-700 px-1"
+          title="Remove"
+        >
+          ×
+        </button>
+      </div>
+      <details className="ml-2">
+        <summary className="text-stone-600 cursor-pointer">
+          Edge metadata
+        </summary>
+        <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-1 ml-3">
+          <AtUriAutocomplete
+            value={edge.relationVocab?.uri ?? ""}
+            onChange={(v) =>
+              onChange({
+                relationVocab: v.trim() ? { uri: v } : undefined,
+              })
+            }
+            expectedCollection="dev.idiolect.vocab"
+            placeholder="relationVocab at-uri"
+            className="w-full px-2 py-1 border border-stone-200 rounded font-mono"
+          />
+          <AtUriAutocomplete
+            value={edge.relationUri ?? ""}
+            onChange={(v) =>
+              onChange({ relationUri: v.trim() || undefined })
+            }
+            placeholder="relationUri at-uri (relation-kind node)"
+            className="w-full px-2 py-1 border border-stone-200 rounded font-mono"
+          />
+          <input
+            type="number"
+            min={0}
+            max={1000}
+            value={edge.weight ?? ""}
+            onChange={(e) =>
+              onChange({
+                weight:
+                  e.target.value === "" ? undefined : Number(e.target.value),
+              })
+            }
+            placeholder="weight (0-1000, scaled)"
+            className="w-full px-2 py-1 border border-stone-200 rounded"
+          />
+          <input
+            type="number"
+            min={0}
+            max={1000}
+            value={meta.confidence ?? ""}
+            onChange={(e) =>
+              patchMeta({
+                confidence:
+                  e.target.value === "" ? undefined : Number(e.target.value),
+              })
+            }
+            placeholder="confidence (0-1000, scaled)"
+            className="w-full px-2 py-1 border border-stone-200 rounded"
+          />
+          <input
+            type="text"
+            value={meta.startDate ?? ""}
+            onChange={(e) =>
+              patchMeta({ startDate: e.target.value || undefined })
+            }
+            placeholder="startDate (RFC 3339)"
+            className="w-full px-2 py-1 border border-stone-200 rounded font-mono"
+          />
+          <input
+            type="text"
+            value={meta.endDate ?? ""}
+            onChange={(e) =>
+              patchMeta({ endDate: e.target.value || undefined })
+            }
+            placeholder="endDate (RFC 3339)"
+            className="w-full px-2 py-1 border border-stone-200 rounded font-mono"
+          />
+          <input
+            type="text"
+            value={meta.source ?? ""}
+            onChange={(e) =>
+              patchMeta({ source: e.target.value || undefined })
+            }
+            placeholder="source (free-form attestation)"
+            className="w-full sm:col-span-2 px-2 py-1 border border-stone-200 rounded"
+          />
+        </div>
+      </details>
+    </div>
+  );
+}
+
+function NodeIdInput({
+  value,
+  onChange,
+  nodeIds,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  nodeIds: string[];
+  placeholder: string;
+}) {
+  const listId = `node-ids-${nodeIds.length}`;
+  return (
+    <>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        list={listId}
+        placeholder={placeholder}
+        className="flex-1 min-w-[8rem] px-2 py-1 border border-stone-200 rounded font-mono"
+      />
+      <datalist id={listId}>
+        {nodeIds.map((id) => (
+          <option key={id} value={id} />
+        ))}
+      </datalist>
+    </>
+  );
+}
+
+function StringArrayEditor({
+  values,
+  onChange,
+  placeholder,
+  label,
+}: {
+  values: string[];
+  onChange: (next: string[]) => void;
+  placeholder: string;
+  label: string;
+}) {
+  function patchAt(i: number, v: string) {
+    onChange(values.map((x, j) => (i === j ? v : x)));
+  }
+  function removeAt(i: number) {
+    onChange(values.filter((_, j) => j !== i));
+  }
+  function add() {
+    onChange([...values, ""]);
+  }
+  return (
+    <div>
+      <span className="text-[10px] text-stone-500">{label}</span>
+      {values.map((v, i) => (
+        <div key={i} className="flex gap-1 mt-0.5">
+          <input
+            type="text"
+            value={v}
+            onChange={(e) => patchAt(i, e.target.value)}
+            placeholder={placeholder}
+            className="flex-1 px-2 py-1 border border-stone-200 rounded"
+          />
+          <button
+            type="button"
+            onClick={() => removeAt(i)}
+            className="text-stone-500 hover:text-red-700 px-1"
+            title="Remove"
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        className="mt-0.5 text-[11px] text-stone-700 underline"
+      >
+        + add
+      </button>
+    </div>
+  );
+}
+
+function ExternalIdsEditor({
+  values,
+  onChange,
+}: {
+  values: ExternalId[];
+  onChange: (next: ExternalId[]) => void;
+}) {
+  function patchAt(i: number, partial: Partial<ExternalId>) {
+    onChange(values.map((v, j) => (i === j ? { ...v, ...partial } : v)));
+  }
+  function removeAt(i: number) {
+    onChange(values.filter((_, j) => j !== i));
+  }
+  function add() {
+    onChange([...values, { system: "wikidata", identifier: "" }]);
+  }
+  return (
+    <div className="ml-3 mt-1 space-y-1">
+      {values.map((v, i) => (
+        <div
+          key={i}
+          className="flex flex-wrap items-center gap-1 border border-stone-100 rounded p-1"
+        >
+          <OpenEnumSelect
+            value={v.system}
+            knownValues={EXTERNAL_ID_SYSTEM_KNOWN}
+            onChange={(next) => patchAt(i, { system: next })}
+            ariaLabel="system"
+            width="narrow"
+          />
+          <input
+            type="text"
+            value={v.identifier}
+            onChange={(e) => patchAt(i, { identifier: e.target.value })}
+            placeholder="identifier (e.g. Q42)"
+            className="flex-1 min-w-[6rem] px-2 py-1 border border-stone-200 rounded font-mono"
+          />
+          <input
+            type="text"
+            value={v.uri ?? ""}
+            onChange={(e) => patchAt(i, { uri: e.target.value || undefined })}
+            placeholder="uri (full)"
+            className="flex-1 min-w-[8rem] px-2 py-1 border border-stone-200 rounded font-mono"
+          />
+          <OpenEnumSelect
+            value={v.matchType ?? ""}
+            knownValues={MATCH_TYPE_KNOWN}
+            onChange={(next) =>
+              patchAt(i, { matchType: next || undefined })
+            }
+            ariaLabel="matchType"
+            width="narrow"
+          />
+          <button
+            type="button"
+            onClick={() => removeAt(i)}
+            className="text-stone-500 hover:text-red-700 px-1"
+            title="Remove"
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        className="text-[11px] text-stone-700 underline"
+      >
+        + external id
+      </button>
+    </div>
+  );
+}
+
+function BoolField({
+  value,
+  onChange,
+  label,
+  tooltip,
+}: {
+  value: boolean | undefined;
+  onChange: (v: boolean | undefined) => void;
+  label: string;
+  tooltip: string;
+}) {
+  // Tri-state: undefined / true / false rendered as a tristate
+  // checkbox approximation. Click cycles undefined → true → false →
+  // undefined; the underlying record never carries `false`
+  // explicitly because the lexicon defaults absent flags to false.
+  const cycled =
+    value === undefined ? true : value === true ? false : undefined;
+  return (
+    <label className="flex items-center gap-1 text-[11px] cursor-pointer" title={tooltip}>
+      <button
+        type="button"
+        onClick={() => onChange(cycled)}
+        className={`w-4 h-4 border rounded text-center text-[10px] leading-4 ${
+          value === true
+            ? "bg-emerald-100 border-emerald-400 text-emerald-900"
+            : value === false
+              ? "bg-stone-100 border-stone-400 text-stone-700"
+              : "bg-white border-stone-300 text-stone-300"
+        }`}
+        aria-label={`${label} (currently ${value === undefined ? "unset" : String(value)})`}
+      >
+        {value === true ? "✓" : value === false ? "−" : "·"}
+      </button>
+      <span className="text-stone-700">{label}</span>
+    </label>
+  );
+}
+
+function OpenEnumSelect({
+  value,
+  knownValues,
+  onChange,
+  ariaLabel,
+  width,
+}: {
+  value: string;
+  knownValues: readonly string[];
+  onChange: (v: string) => void;
+  ariaLabel?: string;
+  width?: "narrow";
+}) {
+  const inKnown = knownValues.includes(value);
+  const [customMode, setCustomMode] = useState(value !== "" && !inKnown);
+  const isCustom = customMode || (value !== "" && !inKnown);
+  const widthClass = width === "narrow" ? "max-w-[10rem]" : "";
+  return (
+    <div className={`flex flex-col sm:flex-row gap-1 ${widthClass}`}>
+      <select
+        value={isCustom ? "__custom__" : value}
+        onChange={(e) => {
+          if (e.target.value === "__custom__") {
+            setCustomMode(true);
+          } else {
+            setCustomMode(false);
+            onChange(e.target.value);
+          }
+        }}
+        className="px-2 py-1 border border-stone-300 rounded"
+        aria-label={ariaLabel}
+      >
+        <option value="">(unset)</option>
+        {knownValues.map((v) => (
+          <option key={v} value={v}>
+            {v}
+          </option>
+        ))}
+        <option value="__custom__">custom…</option>
+      </select>
+      {isCustom && (
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="flex-1 px-2 py-1 border border-stone-300 rounded font-mono"
+          placeholder="community-extended"
+          autoFocus
+        />
+      )}
+    </div>
+  );
+}
+
+function trimMetadata(m: EdgeMetadata): EdgeMetadata | undefined {
+  const trimmed: EdgeMetadata = {};
+  if (m.confidence !== undefined) trimmed.confidence = m.confidence;
+  if (m.startDate) trimmed.startDate = m.startDate;
+  if (m.endDate) trimmed.endDate = m.endDate;
+  if (m.source) trimmed.source = m.source;
+  return Object.keys(trimmed).length === 0 ? undefined : trimmed;
 }

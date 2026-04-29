@@ -207,6 +207,39 @@ fn downstream_consumers(draft: &Draft) -> Vec<GuidanceItem> {
                      the recommendation."
                 .into(),
         }],
+        DraftKind::Deliberation => vec![GuidanceItem {
+            severity: GuidanceSeverity::Info,
+            headline: "Deliberations open community decisions".into(),
+            detail: "Once published, member clients can attach \
+                     statements (`dev.idiolect.deliberationStatement`) \
+                     and votes (`dev.idiolect.deliberationVote`) to this \
+                     deliberation by strong-ref. The \
+                     `deliberation-tally` observer folds the vote \
+                     stream into per-statement counts and publishes a \
+                     `deliberationOutcome` once the deliberation \
+                     closes."
+                .into(),
+        }],
+        DraftKind::DeliberationStatement => vec![GuidanceItem {
+            severity: GuidanceSeverity::Info,
+            headline: "Seed statements bootstrap the deliberation".into(),
+            detail: "Statements pre-loaded onto a deliberation give \
+                     voters something to react to without waiting for \
+                     organic submissions. Set `anonymous: true` and \
+                     publish under a service DID when seed statements \
+                     should not carry a participant identity."
+                .into(),
+        }],
+        DraftKind::DeliberationOutcome => vec![GuidanceItem {
+            severity: GuidanceSeverity::Info,
+            headline: "Outcomes summarise a closed deliberation".into(),
+            detail: "Outcome records are normally observer-published \
+                     by folding the vote stream. Hand-authoring one \
+                     overrides the observer's view; downstream \
+                     consumers select among multiple outcomes by \
+                     `computedAt`."
+                .into(),
+        }],
     }
 }
 
@@ -243,15 +276,19 @@ fn missing_fields(draft: &Draft) -> Vec<GuidanceItem> {
             out
         }
         Draft::Vocab(d) => {
-            if d.body.actions.is_empty() {
+            let actions_empty = d.body.actions.as_ref().is_none_or(Vec::is_empty);
+            let nodes_empty = d.body.nodes.as_ref().is_none_or(Vec::is_empty);
+            if actions_empty && nodes_empty {
                 vec![GuidanceItem {
                     severity: GuidanceSeverity::Warning,
                     headline: "Vocabulary has no entries".into(),
-                    detail: "An empty action list publishes a well-formed \
-                             but useless vocabulary; no encounter can \
-                             ground a use against it. Add at least the \
-                             `top` entry plus any leaf actions you expect \
-                             encounters to cite."
+                    detail: "Both the legacy `actions` tree and the \
+                             new `nodes` graph are empty. Add at least \
+                             one entry: a `top` action plus its leaves \
+                             for the tree shape, or a set of typed \
+                             nodes (`concept` / `relation` / `instance` \
+                             / `type` / `collection`) plus connecting \
+                             edges for the graph shape."
                         .into(),
                 }]
             } else {
@@ -270,6 +307,20 @@ fn missing_fields(draft: &Draft) -> Vec<GuidanceItem> {
                              nobody. Add member DIDs once the community \
                              coalesces, or set `membershipRoll` to point \
                              at an external roster record."
+                        .into(),
+                });
+            }
+            if d.body.record_hosting.is_none() {
+                out.push(GuidanceItem {
+                    severity: GuidanceSeverity::Hint,
+                    headline: "Declare where this community's records live".into(),
+                    detail: "Set `recordHosting` to `member-hosted` \
+                             (records on member PDSes; the default), \
+                             `community-hosted` (records on a community \
+                             AppView, Acorn-style; pair with \
+                             `appviewEndpoint`), or `hybrid` (both). \
+                             Consumers crawling for community records \
+                             use this to choose a surface."
                         .into(),
                 });
             }
@@ -298,6 +349,65 @@ fn missing_fields(draft: &Draft) -> Vec<GuidanceItem> {
                              Adding e.g. `roundtrip-test` raises the bar \
                              and lets `sufficient_verifications_for` \
                              filter out lenses that haven't been verified."
+                        .into(),
+                });
+            }
+            out
+        }
+        Draft::Deliberation(d) => {
+            let mut out = Vec::new();
+            if d.body.classification.is_none() {
+                out.push(GuidanceItem {
+                    severity: GuidanceSeverity::Hint,
+                    headline: "No classification declared".into(),
+                    detail: "Setting `classification` (e.g. `question` / \
+                             `proposal` / `grievance` / `retrospective`) \
+                             lets readers and observers fold votes per \
+                             argumentative role. Communities running \
+                             richer typologies override the default \
+                             vocabulary via `classificationVocab`."
+                        .into(),
+                });
+            }
+            if d.body.status.is_none() {
+                out.push(GuidanceItem {
+                    severity: GuidanceSeverity::Hint,
+                    headline: "Deliberation has no status".into(),
+                    detail: "Set `status` to `open` for active \
+                             deliberation. Use `tabled`, `adopted`, or \
+                             `rejected` once it closes; observer tallies \
+                             also key off this for outcome publication."
+                        .into(),
+                });
+            }
+            out
+        }
+        Draft::DeliberationStatement(d) => {
+            let mut out = Vec::new();
+            if d.body.classification.is_none() {
+                out.push(GuidanceItem {
+                    severity: GuidanceSeverity::Hint,
+                    headline: "No statement classification".into(),
+                    detail: "Tagging a statement as `claim` / \
+                             `proposal` / `dissent` / `clarification` / \
+                             `question` lets observers segment vote \
+                             tallies by argumentative role."
+                        .into(),
+                });
+            }
+            out
+        }
+        Draft::DeliberationOutcome(d) => {
+            let mut out = Vec::new();
+            if d.body.statement_tallies.is_empty() {
+                out.push(GuidanceItem {
+                    severity: GuidanceSeverity::Warning,
+                    headline: "Outcome has no statement tallies".into(),
+                    detail: "An outcome with empty `statementTallies` \
+                             carries no information. Either let an \
+                             observer publish the outcome (preferred) \
+                             or fill in the per-statement vote counts \
+                             before publishing this draft."
                         .into(),
                 });
             }

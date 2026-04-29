@@ -60,12 +60,17 @@ export default defineConfig(({ command }) => ({
     target: "esnext",
     sourcemap: true,
   },
-  // The dep optimizer would pre-bundle `@panproto/core` and rewrite
-  // its `import.meta.url` glue resolver to a path that doesn't
-  // exist. We bypass that resolver entirely by passing a
-  // pre-imported glue (see src/panproto/init.ts), so excluding the
-  // package keeps dev consistent with prod.
+  // The dep optimizer would pre-bundle `@panproto/core` and the
+  // wasm-bindgen glue we alias as `@panproto-glue`, rewriting their
+  // `import.meta.url` resolution to `node_modules/.vite/deps/` —
+  // the sibling `_bg.wasm` doesn't live there, so the relative
+  // fetch returns the SPA HTML and `WebAssembly.instantiate` fails
+  // with `expected magic word ..., found 3c 21 64 6f`. Excluding
+  // both ids keeps the glue served from its real `dist/` path so
+  // its `new URL("./panproto_wasm_bg.wasm", import.meta.url)`
+  // resolves correctly. `optimizeDeps` is dev-only; prod `vite
+  // build` is unaffected.
   optimizeDeps: {
-    exclude: ["@panproto/core"],
+    exclude: ["@panproto/core", "@panproto-glue"],
   },
 }));

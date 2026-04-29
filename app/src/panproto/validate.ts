@@ -17,8 +17,20 @@ import { bundledLexicons } from "../lexicons/bundle";
 /** Cache of `dev.idiolect.<kind>` BuiltSchemas, lazily populated. */
 const schemaCache = new Map<string, BuiltSchema>();
 
+function nsidForKind(kind: string): string {
+  // Kebab-case draft kinds map to camelCase lexicon nsid stems.
+  switch (kind) {
+    case "deliberation-statement":
+      return "dev.idiolect.deliberationStatement";
+    case "deliberation-outcome":
+      return "dev.idiolect.deliberationOutcome";
+    default:
+      return `dev.idiolect.${kind}`;
+  }
+}
+
 function schemaForKind(kind: string): BuiltSchema {
-  const nsid = `dev.idiolect.${kind}`;
+  const nsid = nsidForKind(kind);
   const hit = schemaCache.get(nsid);
   if (hit) return hit;
   const lex = bundledLexicons.find((l) => l.nsid === nsid);
@@ -53,7 +65,14 @@ export interface ValidationResult {
  *   `error` is a one-line summary; `issues` carries the detail.
  */
 export function validateRecord(
-  kind: "dialect" | "vocab" | "community" | "recommendation",
+  kind:
+    | "dialect"
+    | "vocab"
+    | "community"
+    | "recommendation"
+    | "deliberation"
+    | "deliberation-statement"
+    | "deliberation-outcome",
   body: unknown,
 ): ValidationResult {
   let schema: BuiltSchema;

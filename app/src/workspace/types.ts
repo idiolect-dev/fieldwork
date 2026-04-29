@@ -7,6 +7,9 @@
 
 import type {
   Community,
+  Deliberation,
+  DeliberationOutcome,
+  DeliberationStatement,
   Dialect,
   Recommendation,
   Vocab,
@@ -16,13 +19,19 @@ export type DraftKind =
   | "dialect"
   | "vocab"
   | "community"
-  | "recommendation";
+  | "recommendation"
+  | "deliberation"
+  | "deliberation-statement"
+  | "deliberation-outcome";
 
 export type Draft =
   | { kind: "dialect"; body: DialectDraftBody }
   | { kind: "vocab"; body: VocabDraftBody }
   | { kind: "community"; body: CommunityDraftBody }
-  | { kind: "recommendation"; body: RecommendationDraftBody };
+  | { kind: "recommendation"; body: RecommendationDraftBody }
+  | { kind: "deliberation"; body: DeliberationDraftBody }
+  | { kind: "deliberation-statement"; body: DeliberationStatementDraftBody }
+  | { kind: "deliberation-outcome"; body: DeliberationOutcomeDraftBody };
 
 export interface DraftEnvelope<B extends object> {
   id: string;
@@ -66,6 +75,9 @@ export type DialectDraftBody = DraftEnvelope<Dialect>;
 export type VocabDraftBody = DraftEnvelope<Vocab>;
 export type CommunityDraftBody = DraftEnvelope<Community>;
 export type RecommendationDraftBody = DraftEnvelope<Recommendation>;
+export type DeliberationDraftBody = DraftEnvelope<Deliberation>;
+export type DeliberationStatementDraftBody = DraftEnvelope<DeliberationStatement>;
+export type DeliberationOutcomeDraftBody = DraftEnvelope<DeliberationOutcome>;
 
 export function draftId(d: Draft): string {
   return d.body.id;

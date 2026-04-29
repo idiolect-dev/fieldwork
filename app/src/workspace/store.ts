@@ -16,7 +16,8 @@ export type ToolKey =
   | "lexicon"
   | "community"
   | "recommendation"
-  | "lens";
+  | "lens"
+  | "deliberation";
 
 export interface AppViewSettings {
   /** Base URL used to resolve `at://` imports. */

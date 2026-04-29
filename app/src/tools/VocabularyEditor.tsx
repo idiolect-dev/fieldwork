@@ -727,14 +727,16 @@ function NodeEditor({
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
-              <NodeIdInput
-                value={meta.inverseOf ?? ""}
-                onChange={(v) =>
-                  patchMeta({ inverseOf: v.trim() || undefined })
-                }
-                nodeIds={relationNodeIds}
-                placeholder="inverseOf (pick a relation node, e.g. narrower_than)"
-              />
+              <div className="min-w-0">
+                <NodeIdInput
+                  value={meta.inverseOf ?? ""}
+                  onChange={(v) =>
+                    patchMeta({ inverseOf: v.trim() || undefined })
+                  }
+                  nodeIds={relationNodeIds}
+                  placeholder="inverseOf (pick a relation node)"
+                />
+              </div>
               <select
                 value={meta.world ?? ""}
                 onChange={(e) =>
@@ -911,7 +913,7 @@ function NodeIdInput({
         onChange={(e) => onChange(e.target.value)}
         list={listId}
         placeholder={placeholder}
-        className="flex-1 min-w-[8rem] px-2 py-1 border border-stone-200 rounded font-mono"
+        className="flex-1 w-full min-w-0 px-2 py-1 border border-stone-200 rounded font-mono"
       />
       <datalist id={listId}>
         {nodeIds.map((id) => (
@@ -1103,9 +1105,13 @@ function OpenEnumSelect({
   const inKnown = knownValues.includes(value);
   const [customMode, setCustomMode] = useState(value !== "" && !inKnown);
   const isCustom = customMode || (value !== "" && !inKnown);
-  const widthClass = width === "narrow" ? "max-w-[10rem]" : "";
+  // The "narrow" width hint applies only to the dropdown so the
+  // node-row's id input can dominate the row's flex-1 share. The
+  // custom-mode text input is allowed to grow freely (the parent
+  // row uses flex-wrap, so it line-breaks rather than overhanging).
+  const selectWidth = width === "narrow" ? "max-w-[8rem]" : "";
   return (
-    <div className={`flex flex-col sm:flex-row gap-1 ${widthClass}`}>
+    <div className="flex flex-wrap items-center gap-1 min-w-0">
       <select
         value={isCustom ? "__custom__" : value}
         onChange={(e) => {
@@ -1116,7 +1122,7 @@ function OpenEnumSelect({
             onChange(e.target.value);
           }
         }}
-        className="px-2 py-1 border border-stone-300 rounded"
+        className={`px-2 py-1 border border-stone-300 rounded ${selectWidth}`}
         aria-label={ariaLabel}
       >
         <option value="">(unset)</option>
@@ -1132,7 +1138,7 @@ function OpenEnumSelect({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="flex-1 px-2 py-1 border border-stone-300 rounded font-mono"
+          className="flex-1 min-w-0 w-24 px-2 py-1 border border-stone-300 rounded font-mono"
           placeholder="community-extended"
           autoFocus
         />

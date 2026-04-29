@@ -9,6 +9,14 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-04-29
+
+### Fixed
+
+- Vocabulary Editor node rows overhung the card border when an open-enum select (kind, status, external-id system, match type) was switched to custom-slug mode. The wrapper capped at `max-w-[10rem]` while the select plus the custom text input wanted ~15rem combined, so the custom input bled past the row. Wrapper drops the cap and uses `flex-wrap` with `min-w-0` on the custom input so it shrinks rather than overhanging.
+- `inverseOf` input in OWL Lite relation metadata could clip its placeholder when sized inside the two-column grid (`flex-1 min-w-[8rem]` doesn't shrink in a grid cell). Switched the underlying `NodeIdInput` to `flex-1 w-full min-w-0` and wrapped the inverseOf use in a `min-w-0` container so the grid column can shrink.
+- Page tab title and OpenGraph metadata used semicolons where pipes are conventional. `<title>fieldwork | a workshop ...</title>` (was `fieldwork; ...`); `og:image:alt` and `twitter:image:alt` updated for parity.
+
 ## [0.2.0] - 2026-04-29
 
 ### Added

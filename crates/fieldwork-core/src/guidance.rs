@@ -243,6 +243,7 @@ fn downstream_consumers(draft: &Draft) -> Vec<GuidanceItem> {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn missing_fields(draft: &Draft) -> Vec<GuidanceItem> {
     // Per-kind suggestion of optional-but-load-bearing fields.
     // Keep these in sync with the lexicon's optional surface; the

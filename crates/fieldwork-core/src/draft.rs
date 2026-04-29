@@ -222,8 +222,8 @@ pub struct DeliberationDraft {
 pub struct DeliberationStatementDraft {
     /// Workspace-assigned draft id.
     pub id: String,
-    /// User-facing label (DeliberationStatement has no `name` field;
-    /// the label is fieldwork-only).
+    /// User-facing label (`DeliberationStatement` has no `name` field.
+    /// The label is fieldwork-only).
     pub label: String,
     /// The record body.
     pub body: DeliberationStatement,
@@ -234,8 +234,8 @@ pub struct DeliberationStatementDraft {
 pub struct DeliberationOutcomeDraft {
     /// Workspace-assigned draft id.
     pub id: String,
-    /// User-facing label (DeliberationOutcome has no `name` field;
-    /// the label is fieldwork-only).
+    /// User-facing label (`DeliberationOutcome` has no `name` field.
+    /// The label is fieldwork-only).
     pub label: String,
     /// The record body.
     pub body: DeliberationOutcome,

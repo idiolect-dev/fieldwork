@@ -9,6 +9,68 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-27
+
+### Removed
+
+- **Lens upload.** The Lens Manager's paste-a-JSON-body publish path
+  is gone, along with `sessions/publishLens.ts`. protolab 0.8.0
+  publishes lenses to the author's PDS itself, so keeping an upload
+  here meant two apps writing the same collection, two copies of the
+  publish path to hold in step, and a write scope fieldwork did not
+  otherwise need. Lenses already published are untouched; only the
+  route for creating new ones from inside fieldwork is removed.
+- **`repo:dev.panproto.schema.lens` from every scope tier.** fieldwork
+  now only reads lens records, and listing public records is
+  unauthenticated, so the write scope was surplus. Dropped from
+  `REPO_SCOPES`, from the curator and full tiers, and from
+  `oauth/client-metadata.json`. Existing sessions keep whatever they
+  were granted; the scope simply stops being requested. Regression
+  tests assert it stays absent from all three, since the natural way
+  to lose this is for somebody to re-add an upload without noticing
+  the scope came back with it.
+
+### Added
+
+- **Lens library.** The Lens Manager is now a read-only view of a
+  repo's published lenses, labelled by the protocols at each end
+  (`atproto → openapi`) rather than by raw at-uri, with round-trip
+  class, law-verification status, and a copy-at-uri button for
+  pasting into a dialect's preferred lenses or a recommendation's
+  lens path. It resolves the `dev.panproto.schema.schema` records a
+  lens points at in the same pass, because a list of bare at-uris
+  tells a curator nothing about what each lens is for. Because
+  listing is a public read, the library works signed out and against
+  any DID, not just the active session's.
+- **Hand-off to protolab.** An "Open protolab" action sits above the
+  library, since authoring is now entirely over there.
+
+### Changed
+
+- **`@panproto/core` 0.39.0 → 0.71.0.** No API breakage on
+  fieldwork's surface; typecheck and tests pass unchanged. fieldwork
+  does not use the protocol specs 0.70.1 removed from the SDK
+  (`ATPROTO_SPEC` and friends) — it reads protocols through the
+  registry already.
+
+### Added
+
+- **A contract test for the wasm glue.** `initPanproto` hands
+  `Panproto.init` the package's own wasm-bindgen module rather than
+  letting the SDK resolve one, so Vite owns the bundling — and the
+  call site casts with `as WasmGlueModule`, which means TypeScript
+  checks nothing about what is actually passed. When the interface
+  gains a member the glue does not carry, `loadWasm` reads `undefined`
+  and it surfaces at run time, on boot, with no compile-time signal.
+  panproto 0.71 added a required `auto_generate_span`, which is
+  exactly that shape. The test reads the member list out of the
+  installed `.d.ts` and checks the glue exports every one, so it keeps
+  checking whatever the current version declares instead of rotting
+  into a snapshot of one release.
+- **Lens walkthrough** rewritten for the read-only page: it now
+  covers authoring in protolab, reading the library, and the fact
+  that no sign-in is required, in place of the upload steps.
+
 ## [0.2.1] - 2026-04-29
 
 ### Fixed

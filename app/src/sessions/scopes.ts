@@ -58,11 +58,11 @@ export const REPO_SCOPES = {
   DELIBERATION: "repo:dev.idiolect.deliberation",
   DELIBERATION_STATEMENT: "repo:dev.idiolect.deliberationStatement",
   DELIBERATION_OUTCOME: "repo:dev.idiolect.deliberationOutcome",
-  // Lens records are panproto-shaped, not idiolect-shaped, but
-  // fieldwork lets curators upload protolab-authored lenses to
-  // their own PDS so dialect / recommendation drafts can reference
-  // them. The scope is part of the curator tier.
-  LENS: "repo:dev.panproto.schema.lens",
+  // No `repo:dev.panproto.schema.lens` here. fieldwork used to accept a
+  // pasted lens body and publish it, which needed the write scope. Since
+  // protolab 0.8.0 publishes lenses itself, fieldwork only *reads* them —
+  // and listing public records is unauthenticated — so requesting a write
+  // scope it never exercises would be asking for more than it uses.
 
   BELIEF: "repo:dev.idiolect.belief",
   ENCOUNTER: "repo:dev.idiolect.encounter",
@@ -82,7 +82,6 @@ const CURATOR_REPO_SCOPES = [
   REPO_SCOPES.DELIBERATION,
   REPO_SCOPES.DELIBERATION_STATEMENT,
   REPO_SCOPES.DELIBERATION_OUTCOME,
-  REPO_SCOPES.LENS,
 ];
 
 const FULL_REPO_SCOPES = [

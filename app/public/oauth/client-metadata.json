@@ -9,10 +9,15 @@
     "https://idiolect.dev/fieldwork/",
     "https://idiolect.dev/fieldwork/oauth/callback"
   ],
-  "grant_types": ["authorization_code", "refresh_token"],
-  "response_types": ["code"],
+  "grant_types": [
+    "authorization_code",
+    "refresh_token"
+  ],
+  "response_types": [
+    "code"
+  ],
   "application_type": "web",
   "token_endpoint_auth_method": "none",
   "dpop_bound_access_tokens": true,
-  "scope": "atproto repo:dev.idiolect.dialect repo:dev.idiolect.vocab repo:dev.idiolect.community repo:dev.idiolect.recommendation repo:dev.idiolect.belief repo:dev.idiolect.encounter repo:dev.idiolect.correction repo:dev.idiolect.observation repo:dev.idiolect.retrospection repo:dev.idiolect.verification repo:dev.idiolect.bounty repo:dev.idiolect.deliberation repo:dev.idiolect.deliberationStatement repo:dev.idiolect.deliberationVote repo:dev.idiolect.deliberationOutcome repo:dev.panproto.schema.lens"
+  "scope": "atproto repo:dev.idiolect.dialect repo:dev.idiolect.vocab repo:dev.idiolect.community repo:dev.idiolect.recommendation repo:dev.idiolect.belief repo:dev.idiolect.encounter repo:dev.idiolect.correction repo:dev.idiolect.observation repo:dev.idiolect.retrospection repo:dev.idiolect.verification repo:dev.idiolect.bounty repo:dev.idiolect.deliberation repo:dev.idiolect.deliberationStatement repo:dev.idiolect.deliberationVote repo:dev.idiolect.deliberationOutcome"
 }

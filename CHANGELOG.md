@@ -9,7 +9,7 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
-## [0.3.0] - 2026-07-27
+## [0.3.0] - 2026-08-19
 
 ### Removed
 
@@ -45,16 +45,6 @@ workspace API, and the import / export contract are all in scope.
 - **Hand-off to protolab.** An "Open protolab" action sits above the
   library, since authoring is now entirely over there.
 
-### Changed
-
-- **`@panproto/core` 0.39.0 → 0.71.0.** No API breakage on
-  fieldwork's surface; typecheck and tests pass unchanged. fieldwork
-  does not use the protocol specs 0.70.1 removed from the SDK
-  (`ATPROTO_SPEC` and friends) — it reads protocols through the
-  registry already.
-
-### Added
-
 - **A contract test for the wasm glue.** `initPanproto` hands
   `Panproto.init` the package's own wasm-bindgen module rather than
   letting the SDK resolve one, so Vite owns the bundling — and the
@@ -67,6 +57,13 @@ workspace API, and the import / export contract are all in scope.
   installed `.d.ts` and checks the glue exports every one, so it keeps
   checking whatever the current version declares instead of rotting
   into a snapshot of one release.
+### Changed
+
+- **`@panproto/core` 0.39.0 → 0.71.0.** No API breakage on
+  fieldwork's surface; typecheck and tests pass unchanged. fieldwork
+  does not use the protocol specs 0.70.1 removed from the SDK
+  (`ATPROTO_SPEC` and friends) — it reads protocols through the
+  registry already.
 - **Lens walkthrough** rewritten for the read-only page: it now
   covers authoring in protolab, reading the library, and the fact
   that no sign-in is required, in place of the upload steps.

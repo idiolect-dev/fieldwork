@@ -8,7 +8,7 @@
         "@atproto/api": "^0.13.0",
         "@atproto/oauth-client-browser": "^0.3.0",
         "@idiolect-dev/schema": "^0.7.0",
-        "@panproto/core": "^0.39.0",
+        "@panproto/core": "^0.74.4",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
         "zustand": "^5.0.0",
@@ -205,7 +205,7 @@
 
     "@nodelib/fs.walk": ["@nodelib/fs.walk@1.2.8", "", { "dependencies": { "@nodelib/fs.scandir": "2.1.5", "fastq": "^1.6.0" } }, "sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg=="],
 
-    "@panproto/core": ["@panproto/core@0.39.0", "", { "dependencies": { "@msgpack/msgpack": "^3.0.0" } }, "sha512-CctgVXC0bY+tQdABbVDJZJGXYYK+QHAMgxLJZL6Opk5ow6190vGkM5rRJp9uPbhI2x/iSRk5YwgPajq6uWduBw=="],
+    "@panproto/core": ["@panproto/core@0.74.4", "", { "dependencies": { "@msgpack/msgpack": "^3.0.0" } }, "sha512-nY3MCQWIsPHBtpqCKnXMU12CxiNSu7Zy9pcwG3ac5P+Me1ckRRNh57T/ml192p9eG/orj2euxzU06wpB9WEzwg=="],
 
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.0-beta.27", "", {}, "sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA=="],
 

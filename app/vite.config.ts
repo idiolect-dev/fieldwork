@@ -2,23 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
-import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
-
-const here = dirname(fileURLToPath(import.meta.url));
-
-// `@panproto/core`'s `Panproto.init()` accepts a pre-imported
-// wasm-bindgen glue module for bundler environments (see the
-// `WasmGlueModule` overload). That is the supported Vite path. The
-// package's `exports` field does not expose the `dist/panproto_wasm.js`
-// subpath, so we alias a stable virtual id at our boundary; Vite +
-// vite-plugin-wasm then bundle the glue and its `_bg.wasm` sibling
-// with proper fingerprinting.
-const PANPROTO_GLUE_ALIAS = "@panproto-glue";
-const panprotoGluePath = resolve(
-  here,
-  "node_modules/@panproto/core/dist/panproto_wasm.js",
-);
 
 // fieldwork is deployed at https://idiolect.dev/fieldwork via GitHub
 // Pages (repo: idiolect-dev/fieldwork). Production asset URLs must
@@ -38,11 +21,6 @@ const panprotoGluePath = resolve(
 export default defineConfig(({ command }) => ({
   base: command === "build" ? "/fieldwork/" : "/",
   plugins: [react(), wasm(), topLevelAwait()],
-  resolve: {
-    alias: {
-      [PANPROTO_GLUE_ALIAS]: panprotoGluePath,
-    },
-  },
   server: {
     host: "127.0.0.1",
     port: 4173,
@@ -60,8 +38,8 @@ export default defineConfig(({ command }) => ({
     target: "esnext",
     sourcemap: true,
   },
-  // The dep optimizer would pre-bundle `@panproto/core` and the
-  // wasm-bindgen glue we alias as `@panproto-glue`, rewriting their
+  // The dep optimizer would pre-bundle `@panproto/core` and its
+  // officially exported wasm-bindgen glue module, rewriting their
   // `import.meta.url` resolution to `node_modules/.vite/deps/` —
   // the sibling `_bg.wasm` doesn't live there, so the relative
   // fetch returns the SPA HTML and `WebAssembly.instantiate` fails
@@ -71,6 +49,6 @@ export default defineConfig(({ command }) => ({
   // resolves correctly. `optimizeDeps` is dev-only; prod `vite
   // build` is unaffected.
   optimizeDeps: {
-    exclude: ["@panproto/core", "@panproto-glue"],
+    exclude: ["@panproto/core", "@panproto/core/panproto_wasm.js"],
   },
 }));

@@ -28,6 +28,7 @@ const TOOL_TO_KIND: Record<ToolKey, DraftKind | null> = {
   deliberation: "deliberation",
   lexicon: null,
   lens: null,
+  infrastructure: null,
 };
 
 const KIND_LABEL: Record<DraftKind, string> = {

@@ -9,6 +9,7 @@ import { CommunityConfig } from "./tools/CommunityConfig";
 import { RecommendationBuilder } from "./tools/RecommendationBuilder";
 import { LensManager } from "./tools/LensManager";
 import { DeliberationComposer } from "./tools/DeliberationComposer";
+import { CommunityWorkbench } from "./tools/CommunityWorkbench";
 import { AppWalkthrough } from "./components/AppWalkthrough";
 import { ConfirmHost } from "./components/ConfirmModal";
 import { Sidebar } from "./components/Sidebar";
@@ -17,6 +18,7 @@ import { initWasm } from "./wasm/loader";
 import { initPanproto } from "./panproto/init";
 
 const TOOL_LABEL: Record<ToolKey, string> = {
+  infrastructure: "Community workbench",
   dialect: "Dialects",
   vocab: "Vocabularies",
   lexicon: "Lexicons",
@@ -156,6 +158,8 @@ function ActiveTool({ tool }: { tool: ToolKey }) {
       return <LensManager />;
     case "deliberation":
       return <DeliberationComposer />;
+    case "infrastructure":
+      return <CommunityWorkbench />;
   }
 }
 

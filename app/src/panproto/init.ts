@@ -7,14 +7,15 @@
 // other build artifact. The package's own runtime resolver (which
 // hides `import.meta.url` from Vite via string concat) is bypassed.
 //
-// `@panproto-glue` is a Vite resolve.alias for
-// `node_modules/@panproto/core/dist/panproto_wasm.js`; its ambient
-// type lives in `src/vite-env.d.ts`. The wasm-bindgen JS file
-// emits `export { __wbg_init as default, ...rust_fn_exports }`, so
-// the ESM namespace shape matches `WasmGlueModule` field for field.
+// Panproto 0.74 exports the glue subpath and its declarations directly, so no
+// local alias or ambient declaration is needed. Its generated declaration and
+// hand-written `WasmGlueModule` currently disagree on `apply_protolens_step`
+// (handle-returning constructor versus the older instance-transform shape).
+// Keep that upstream boundary isolated here; `glue.test.ts` verifies that the
+// runtime module still carries every export the loader reads.
 
 import { Panproto, type WasmGlueModule } from "@panproto/core";
-import * as panprotoGlue from "@panproto-glue";
+import * as panprotoGlue from "@panproto/core/panproto_wasm.js";
 
 let _panproto: Panproto | null = null;
 let _initPromise: Promise<Panproto> | null = null;
@@ -22,7 +23,9 @@ let _initPromise: Promise<Panproto> | null = null;
 export async function initPanproto(): Promise<Panproto> {
   if (_panproto) return _panproto;
   if (_initPromise) return _initPromise;
-  _initPromise = Panproto.init(panprotoGlue as WasmGlueModule).then((p) => {
+  _initPromise = Panproto.init(
+    panprotoGlue as unknown as WasmGlueModule,
+  ).then((p) => {
     _panproto = p;
     return p;
   });

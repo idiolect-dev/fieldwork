@@ -9,6 +9,56 @@ workspace API, and the import / export contract are all in scope.
 
 ## [Unreleased]
 
+### Added
+
+- **Community Workbench for Idiolect 0.13.** A continuous release thread now
+  carries communities through identity and governance setup, Panproto-backed
+  change analysis, attributable review, verification gates, release assembly,
+  detached signatures, resumable migration state, federation declarations, and
+  portable exit. Workspace history persists separately from editor drafts and
+  exports as a complete versioned bundle with an inventory.
+- **Progressive disclosure as an interface rule.** The workbench separates
+  Orient, Act, Inspect, and Interoperate depths. Plain-language purpose and the
+  fields needed for the current task appear first; reusable native disclosure
+  rows reveal resource limits, raw schema documents, digests, detached
+  signatures, migration checkpoints, and semantic mappings in context.
+- **Participant-facing compatibility reports.** Fieldwork uses Panproto 0.74.4's
+  full diff, protocol classification, and optic analysis, then translates
+  removed structure, new requirements, kind changes, and optional additions
+  into actionable consequences. Inputs respect the workspace's byte and report
+  limits.
+- Bundled `changeProposal`, `communityRelease`, `migrationRun`, and `federation`
+  lexicons, examples, and seven generated orchestrator query lexicons. OAuth
+  curator metadata now requests the four matching repository scopes, with the
+  existing parity test covering them.
+- Frontend tests for consequence translation, the three-state verification
+  gate, policy readiness, and portable bundle inventory.
+
+### Changed
+
+- Fieldwork moves to 0.4.0 and the Rust workspace to 0.2.0 for the new community
+  infrastructure surface.
+
+- `@panproto/core` now targets 0.74.4 in both lockfiles. Fieldwork imports the
+  package's public `panproto_wasm.js` export directly, so Vite no longer needs a
+  private `dist/` alias or an ambient module declaration. One isolated cast
+  remains for the package's current `apply_protolens_step` declaration mismatch;
+  the runtime export contract stays covered by a test.
+- Lexicon validation now enters through Panproto's canonical protocol registry
+  with `parseSchemaDocument("atproto", ...)`. This keeps Fieldwork on the same
+  dispatch path Panproto exposes for cross-document schema formats.
+- CI and Pages builds use `npm ci`, making the npm lockfile the reproducible
+  installation contract.
+- CI and Pages workflows use the current supported `checkout` and `setup-node`
+  action majors.
+
+### Fixed
+
+- The Bun lockfile and vendored Panproto provenance now agree with the package
+  manifest; both had remained on the pre-0.71 integration after the last bump.
+- The walkthrough describes Lens Manager as the read-only library it is rather
+  than as the upload tool removed in 0.3.0.
+
 ## [0.3.0] - 2026-08-19
 
 ### Removed

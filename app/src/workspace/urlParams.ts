@@ -34,6 +34,9 @@ const VALID_TOOLS: ToolKey[] = [
   "lexicon",
   "community",
   "recommendation",
+  "deliberation",
+  "lens",
+  "infrastructure",
 ];
 
 /**

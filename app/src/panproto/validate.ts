@@ -1,8 +1,8 @@
 // Record validation via panproto.
 //
-// The chain is: lexicon JSON → `panproto.parseLexicon` → BuiltSchema
-// (cached per-NSID) → `panproto.parseJson(schema, body)` → Instance
-// → `instance.validate()` → typed error list.
+// The chain is: lexicon JSON → `panproto.parseSchemaDocument("atproto")`
+// → BuiltSchema (cached per-NSID) → `panproto.parseJson(schema, body)`
+// → Instance → `instance.validate()` → typed error list.
 //
 // We prefer panproto over `@atproto/lexicon` because panproto is the
 // schema theory the rest of idiolect is built on; its validator
@@ -37,7 +37,7 @@ function schemaForKind(kind: string): BuiltSchema {
   if (!lex) {
     throw new Error(`no bundled lexicon for ${nsid}`);
   }
-  const built = panproto().parseLexicon(lex.body as object);
+  const built = panproto().parseSchemaDocument("atproto", lex.body as object);
   schemaCache.set(nsid, built);
   return built;
 }
@@ -116,7 +116,7 @@ export function validateRecord(
  */
 export function validateLexiconDocument(doc: unknown): ValidationResult {
   try {
-    const schema = panproto().parseLexicon(doc as object);
+    const schema = panproto().parseSchemaDocument("atproto", doc as object);
     // Probe the resulting schema's metadata so a partial parse
     // surfaces as an issue rather than a silent pass.
     const _ = schema.data;

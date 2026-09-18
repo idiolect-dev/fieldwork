@@ -7,11 +7,13 @@
 A workshop for community schema curation on atproto. Built on [idiolect].
 
 fieldwork composes the records that govern how a community translates
-between atproto schemas. Seven tools share one in-memory workspace:
-authors compose dialects, vocabularies, communities, recommendations,
-and deliberations against the `dev.idiolect.*` lexicon family, browse
-the lexicons themselves, and upload protolab-authored panproto lenses
-to their own PDS. Drafts export as record JSON, copy as
+between atproto schemas. Eight tools share a browser-local workspace.
+The Community Workbench carries a governed change from intent through
+review, release, migration, federation, and portable exit. Focused
+editors compose dialects, vocabularies, communities, recommendations,
+and deliberations against the `dev.idiolect.*` lexicon family, while
+the lens library and lexicon browser make published infrastructure
+inspectable. Drafts export as record JSON, copy as
 `idiolect-cli` invocations, or publish straight to the active session
 via atproto OAuth.
 
@@ -19,11 +21,14 @@ Live at **<https://idiolect.dev/fieldwork/>**
 
 ## Tools
 
-Seven tools, all working off the same in-memory **Workspace** so an
-import in one tool feeds suggestions in the next.
+Eight tools. Record editors work off the same in-memory **Workspace**
+so an import in one tool feeds suggestions in the next; the Community
+Workbench keeps its lifecycle history in a separately portable
+community workspace.
 
 | Tool                       | What it builds                                                                                       | Record kind        |
 |----------------------------|------------------------------------------------------------------------------------------------------|--------------------|
+| `Community Workbench`      | A governed release thread: change packets, reviews, signed releases, migration runs, federation declarations, and a complete exit bundle. | `dev.idiolect.{changeProposal,communityRelease,migrationRun,federation}` |
 | `Dialect Composer`         | A dialect with preferred lenses, deprecations, and supersedes-chain.                                 | `dev.idiolect.dialect`        |
 | `Vocabulary Editor`        | A typed multi-relation knowledge graph (OWL Lite property characteristics + SKOS Core annotations) or the legacy action / purpose tree. | `dev.idiolect.vocab`          |
 | `Community Config`         | A community with members, role assignments, conventions, endorsements, core lens / schema sets, and record-hosting policy. | `dev.idiolect.community`      |
@@ -36,6 +41,49 @@ Every editor has the same import / export shape. Paste an at-uri,
 drop a JSON file, or pick from the bundled fixtures. Export
 downloads a JSON record body, copies an `idiolect-cli` publish
 command, or publishes straight to your PDS via OAuth.
+
+## Community Workbench
+
+The workbench is the participant-facing surface for Idiolect 0.13's
+community infrastructure. Its release thread has eight stops:
+
+1. **Start here** defines the four concepts a newcomer needs and shows
+   progress toward a first release.
+2. **Community rules** records the accountable DID, decision model,
+   quorum, approval threshold, release signature requirement, review
+   period, and resource boundaries.
+3. **Change packets** keep plain-language intent beside exact source
+   and target definitions. Panproto 0.74.4 supplies the full schema
+   diff, compatibility class, and migration optic. Fieldwork translates
+   those results into effects participants can review.
+4. **Review and decide** records attributable reviews and applies the
+   community's policy. An incomplete verification is never treated as
+   a passing result.
+5. **Signed releases** collect approved changes and detached ES256
+   signatures. The Idiolect CLI remains the reference signer and
+   verifier.
+6. **Migration runs** expose durable status, progress, checkpoints, and
+   bounded failure information.
+7. **Federation** declares peer relationships separately from the
+   mappings that support actual semantic interoperability.
+8. **Exit and export** downloads the complete workspace and inventory,
+   or individual publishable protocol records.
+
+### Progressive disclosure
+
+The workbench uses four disclosure depths consistently:
+
+- **Orient** gives a plain-language purpose, defines unfamiliar terms,
+  and names one next action.
+- **Act** shows only the fields needed to complete the present task.
+- **Inspect** reveals policy limits, decision evidence, semantic
+  mappings, and migration checkpoints in context.
+- **Interoperate** reveals raw schema JSON, content digests, detached
+  signatures, and protocol-record exports.
+
+The first two depths are visible by default. Native HTML disclosure
+rows expose the latter two, so keyboard and screen-reader users get the
+same hierarchy without a separate expert-mode interface.
 
 ## Why static-only
 
@@ -113,8 +161,8 @@ are surfaced in the Sign-in menu:
 | Intent       | Scopes                                                                              |
 |--------------|-------------------------------------------------------------------------------------|
 | `read-only`  | `atproto`                                                                           |
-| `curator`    | `atproto repo:dev.idiolect.{dialect,vocab,community,recommendation,deliberation,deliberationStatement,deliberationOutcome} repo:dev.panproto.schema.lens` |
-| `full`       | `atproto` + every `repo:dev.idiolect.*` collection plus the lens scope               |
+| `curator`    | `atproto repo:dev.idiolect.{dialect,vocab,community,recommendation,deliberation,deliberationStatement,deliberationOutcome,changeProposal,communityRelease,migrationRun,federation}` |
+| `full`       | `atproto` + every `repo:dev.idiolect.*` collection Fieldwork understands             |
 
 Once `dev.idiolect.auth.{curatorAccess,fullAccess}` permission-set
 lexicons are published and resolvable, set
@@ -131,6 +179,7 @@ crates/
 app/
   src/
     tools/          one component tree per tool (DialectComposer, ...)
+    infrastructure/ community workspace model, policy gate, Panproto consequence analysis, portable export
     workspace/      shared workspace state (zustand)
     sessions/       atproto OAuth client, scope tiers, publish + normalise helpers
     components/     AtUriAutocomplete, HandleSearch, GuidancePane, DiffPane, ImportButton, ExportButton, SessionMenu, Sidebar

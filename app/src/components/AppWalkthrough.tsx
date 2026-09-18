@@ -56,7 +56,7 @@ const FLOWS: Flow[] = [
       },
       {
         title: "Tool nav",
-        body: "Switch workshops from this row. Seven tools: Dialect Composer, Vocabulary Editor, Community Config, Recommendation Builder, Deliberation Composer (new in idiolect v0.7), Lens Manager (uploads panproto lenses), and Lexicon Browser (read-only).",
+        body: "Switch workshops from this row. The Community workbench carries a governed change from proposal through release, migration, federation, and portable exit. The record editors remain available for focused work on dialects, vocabularies, communities, recommendations, and deliberations.",
         target: "[data-walk='nav']",
       },
       {

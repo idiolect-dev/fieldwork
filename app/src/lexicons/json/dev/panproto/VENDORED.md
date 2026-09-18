@@ -6,8 +6,8 @@ Do not edit them in place — update the pin below and re-vendor.
 | field           | value                                      |
 |-----------------|--------------------------------------------|
 | upstream        | `panproto/panproto` (git)                  |
-| commit          | `02158abb80252378a21bb1a9bee839d053a21795` |
-| workspace ver.  | `0.39.0`                                   |
+| commit          | `869adad52114fdef6d7a0c2e0d6526bec43d84c2` |
+| workspace ver.  | `0.74.4`                                   |
 | source path     | `lexicons/dev/panproto/`                   |
 
 ## Vendored set
@@ -45,3 +45,7 @@ downstream feature needs them; the vendor step is mechanical.
 2. `cp` the new upstream `.json` files over the ones listed above.
 3. `cargo run -p idiolect-codegen` to regenerate the typed bindings.
 4. `cargo test` + `pnpm test` to confirm no downstream break.
+
+The files above were compared byte for byte with commit
+`869adad52114fdef6d7a0c2e0d6526bec43d84c2`; no vendored Lexicon contents
+changed during the 0.74.4 refresh.

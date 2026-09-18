@@ -17,7 +17,8 @@ export type ToolKey =
   | "community"
   | "recommendation"
   | "lens"
-  | "deliberation";
+  | "deliberation"
+  | "infrastructure";
 
 export interface AppViewSettings {
   /** Base URL used to resolve `at://` imports. */
@@ -119,7 +120,9 @@ function recordBody(d: Draft): unknown {
 const persisted = loadPersisted();
 
 export const useWorkspaceStore = create<WorkspaceState>((set) => ({
-  tool: "dialect",
+  // New participants begin with the guided lifecycle. The focused record
+  // editors remain one click away, and existing URL parameters still win.
+  tool: "infrastructure",
   drafts: persisted?.drafts ?? {},
   draftOrder: persisted?.draftOrder ?? [],
   active: persisted?.active ?? {},

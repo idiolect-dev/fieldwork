@@ -10,8 +10,10 @@
 //
 // Source of truth lives upstream in `idiolect-dev/idiolect`'s
 // `lexicons/` tree. Copies in `json/` are vendored at the
-// `@idiolect-dev/schema@0.7.x` cut and re-vendored alongside each
-// release of fieldwork.
+// Idiolect v0.13 protocol cut and re-vendored alongside each Fieldwork
+// release. The app's record editors may use an older generated type
+// package while newly introduced records incubate in the workbench;
+// runtime validation always uses this bundled set.
 
 interface BundledLexicon {
   /** Canonical NSID of the lexicon (`id` field of the doc). */

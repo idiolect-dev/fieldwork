@@ -3,17 +3,11 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
-// fieldwork hands `Panproto.init` its own glue module rather than letting
-// the package resolve one, so Vite owns the wasm bundling (see `init.ts`).
-// That call site casts with `as WasmGlueModule`, which means TypeScript
-// checks nothing about the object actually passed: if the interface gains a
-// member the glue does not carry, `loadWasm` reads `undefined` and the
-// failure surfaces at run time, on boot, with no compile-time signal.
-//
-// panproto 0.71 did exactly that, adding a required `auto_generate_span`.
-// The contract is read out of the installed `.d.ts` rather than pinned to a
-// hand-written list, so this keeps checking whatever the current version
-// declares instead of rotting into a snapshot of one release.
+// Fieldwork imports Panproto's public glue subpath so Vite owns wasm bundling
+// (see `init.ts`). The package's generated declarations and hand-written
+// `WasmGlueModule` disagree on one function in 0.74.4, so the initializer keeps
+// an isolated cast. This test guards the runtime member contract until those
+// upstream declarations converge.
 
 const here = dirname(fileURLToPath(import.meta.url));
 const pkg = resolve(here, "../../node_modules/@panproto/core/dist");
@@ -41,7 +35,7 @@ function glueExports(): Set<string> {
   return new Set(names.filter(Boolean));
 }
 
-describe("panproto wasm glue satisfies WasmGlueModule", () => {
+describe("published panproto wasm glue", () => {
   it("declares a non-trivial contract", () => {
     // Guards the parser itself: a regex that silently matched nothing
     // would make every assertion below vacuous.

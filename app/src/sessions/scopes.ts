@@ -58,6 +58,10 @@ export const REPO_SCOPES = {
   DELIBERATION: "repo:dev.idiolect.deliberation",
   DELIBERATION_STATEMENT: "repo:dev.idiolect.deliberationStatement",
   DELIBERATION_OUTCOME: "repo:dev.idiolect.deliberationOutcome",
+  CHANGE_PROPOSAL: "repo:dev.idiolect.changeProposal",
+  COMMUNITY_RELEASE: "repo:dev.idiolect.communityRelease",
+  MIGRATION_RUN: "repo:dev.idiolect.migrationRun",
+  FEDERATION: "repo:dev.idiolect.federation",
   // No `repo:dev.panproto.schema.lens` here. fieldwork used to accept a
   // pasted lens body and publish it, which needed the write scope. Since
   // protolab 0.8.0 publishes lenses itself, fieldwork only *reads* them —
@@ -82,6 +86,10 @@ const CURATOR_REPO_SCOPES = [
   REPO_SCOPES.DELIBERATION,
   REPO_SCOPES.DELIBERATION_STATEMENT,
   REPO_SCOPES.DELIBERATION_OUTCOME,
+  REPO_SCOPES.CHANGE_PROPOSAL,
+  REPO_SCOPES.COMMUNITY_RELEASE,
+  REPO_SCOPES.MIGRATION_RUN,
+  REPO_SCOPES.FEDERATION,
 ];
 
 const FULL_REPO_SCOPES = [
